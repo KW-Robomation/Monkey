@@ -1,14 +1,14 @@
 function sketch() {
-  pop_sketch();
-  let pCanvas = new p5((p) => {
-    p.setup = function () {
-      psetup(p);
-    };
-
-    p.draw = () => {
-      pdraw(p);
-    };
-  }, "p5-canvas");
+    pop_sketch();
+    let pCanvas = new p5((p) => {
+        p.setup = function () {
+            psetup(p);
+        };
+    
+        p.draw = () => {
+            pdraw(p);
+        };
+    }, "p5-canvas");
 }
 
 let canvasWidth, canvasHeight;
@@ -33,15 +33,15 @@ const scale = 0.5;
 const moreHeight = 100;
 
 function pop_sketch() {
-  const option = {
-    title: "Simulator",
-    body: '<div id="p5-canvas"></div>',
-    width: 1,
-    height: 1,
-    modal: true,
-    actions: {},
-  };
-  w2custompopup.open(option);
+    const option = {
+      title: "Simulator",
+      body: '<div id="p5-canvas"></div>',
+      width: 1,
+      height: 1,
+      modal: true,
+      actions: {},
+    }
+    w2custompopup.open(option);
 }
 
 // setup
@@ -65,7 +65,7 @@ function psetup(p) {
   bodyTopPath = spine.images.get("body_top.png");
   armTopPath = spine.images.get("arm_top.png");
   armTopClosePath = spine.images.get("arm_top_close.png");
-
+  
   arm1 = p.loadImage(arm1Path);
   arm2 = p.loadImage(arm2Path);
   body = p.loadImage(bodyPath);
@@ -117,13 +117,13 @@ function pdraw(p) {
   p.push();
   p.translate(x0, y0);
   p.rotate(currentAngleJoint1);
-  if ($("end_effector").d == 1) {
+  if ($('end_effector').d == 1) {
     p.image(armTopClose, -135, -815);
   } else {
-    p.image(armTop, -137, -805);
+    p.image(armTop, -137, -805);    
   }
   p.pop();
-
+  
   // 바디 그리기
   p.image(body, x1 - 290, y1 + 110);
   p.image(body2, x1 - 135, y1 - 85);
@@ -133,15 +133,9 @@ function pdraw(p) {
   p.line(900, 0, 900, 1300);
 
   // 센서값 가져오기
-  newAngleJoint1 = $("encoder.joint_1").d;
-  newAngleJoint2 = $("encoder.joint_2").d;
+  newAngleJoint1 = $('encoder.joint_1').d;
+  newAngleJoint2 = $('encoder.joint_2').d;
 
-  currentAngleJoint1 =
-    newAngleJoint1 === null
-      ? currentAngleJoint1
-      : p.radians(newAngleJoint1) * -1;
-  currentAngleJoint2 =
-    newAngleJoint2 === null
-      ? currentAngleJoint2
-      : p.radians(newAngleJoint2) * -1;
+  currentAngleJoint1 = newAngleJoint1 === null ? currentAngleJoint1 : p.radians(newAngleJoint1) * -1;
+  currentAngleJoint2 = newAngleJoint2 === null ? currentAngleJoint2 : p.radians(newAngleJoint2) * -1;
 }
