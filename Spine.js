@@ -1,93 +1,164 @@
-// 일단 라쿤봇에서 J3, J4 삭제함. 이 중 안 쓰는 함수도 있고, 누락된 함수도 있을 것.
+class Monkey{
+    #minEncoderJoint1 = -30;
+    #maxEncoderJoint1 = 180;
+    #minEncoderJoint2 = 40;
+    #maxEncoderJoint2 = 140;
+    #angleSpeedOffset = 10;
+    #speedJointOffset = 10;
+    // constructor 
+    constructor(angleSpeed){
+        this._angleSpeed = angleSpeed;
+        this.repeat = null; // 반복 함수 저장
+        this.encoderJoint1 = $('encoder.joint_1').d;
+        this.encoderJoint2 = $('encoder.joint_2').d;    
+        this.targetAngleJoint1 = null;
+        this.targetAngleJoint2 = null;
+        this._speedJoint1 = 0;
+        this._speedJoint2 = 0;
+    }
+    get angleSpeed() {
+        return this._angleSpeed;
+    }
 
-class Monkey2Joint {
-  #minEncoderJoint1 = -120; // 상수값 자체는 추후 수정 필요
-  #maxEncoderJoint1 = 120;
-  #minEncoderJoint2 = 0;
-  #maxEncoderJoint2 = 120;
-  #angleSpeedOffset = 10;
-  #speedJointOffset = 10;
+    set angleSpeed(value) {
+        this._angleSpeed = value / this.#angleSpeedOffset;
+    }
+    // speed gettet, setter
+    get speedJoint1() {
+        return this._speedJoint1;
+    }
 
-  constructor(angleSpeed) {
-    this._angleSpeed = angleSpeed;
-    this.repeat = null;
+    set speedJoint1(value) {
+        this._speedJoint1 = value / this.#speedJointOffset;
+    }
 
-    this.encoderJoint1 = $('encoder.joint_1').d;
-    this.encoderJoint2 = $('encoder.joint_2').d;
+    get speedJoint2() {
+        return this._speedJoint2;
+    }
 
-    this.targetAngleJoint1 = null;
-    this.targetAngleJoint2 = null;
+    set speedJoint2(value) {
+        this._speedJoint2 = value / this.#speedJointOffset;
+    }
+    get minJoint1(){
+        return this.#minEncoderJoint1;
+    }
+    set minJoint1(value){
+        this.#minEncoderJoint1 = value;
+    }
+    get maxJoint1(){
+        return this.#maxEncoderJoint1;
+    }
+    set maxJoint1(value){
+        this.#maxEncoderJoint1 = value;
+    }
+    get minJoint2(){
+        return this.#minEncoderJoint2;
+    }
+    set minJoint2(value){
+        this.#minEncoderJoint2 = value;
+    }
+    get maxJoint2(){
+        return this.#maxEncoderJoint2;
+    }
+    set maxJoint2(value){
+        this.#maxEncoderJoint2 = value;
+    }
+    // 각도 기반 이동
+    moveByAngle(
+    targetAngleJoint1,
+    targetAngleJoint2
+  ) {
+    if ( // 이미 목표 각도라면 종료
+      this.targetAngleJoint1 === targetAngleJoint1 &&
+      this.targetAngleJoint2 === targetAngleJoint2 
+    ) {
+      return;
+    }
 
-    this._speedJoint1 = 0;
-    this._speedJoint2 = 0;
-  }
-
-  get angleSpeed() { return this._angleSpeed; }
-  set angleSpeed(value) { this._angleSpeed = value / this.#angleSpeedOffset; }
-
-  get speedJoint1() { return this._speedJoint1; }
-  set speedJoint1(value) { this._speedJoint1 = value / this.#speedJointOffset; }
-
-  get speedJoint2() { return this._speedJoint2; }
-  set speedJoint2(value) { this._speedJoint2 = value / this.#speedJointOffset; }
-
-  moveByAngle(targetAngleJoint1, targetAngleJoint2) {
-    if (this.targetAngleJoint1 === targetAngleJoint1 &&
-        this.targetAngleJoint2 === targetAngleJoint2) return;
-
+    // 목표 각도 설정
     this.targetAngleJoint1 = targetAngleJoint1;
     this.targetAngleJoint2 = targetAngleJoint2;
 
-    if (this.repeat) clearInterval(this.repeat);
-
     this.repeat = setInterval(() => {
-      this.encoderJoint1 = Math.max(Math.min(this.encoderJoint1 + (this.encoderJoint1 < this.targetAngleJoint1 ? this.angleSpeed : -this.angleSpeed), this.targetAngleJoint1), this.targetAngleJoint1);
-      this.encoderJoint2 = Math.max(Math.min(this.encoderJoint2 + (this.encoderJoint2 < this.targetAngleJoint2 ? this.angleSpeed : -this.angleSpeed), this.targetAngleJoint2), this.targetAngleJoint2);
+      if (this.encoderJoint1 < this.targetAngleJoint1) {
+        if (this.encoderJoint1 + this.angleSpeed > this.targetAngleJoint1) {
+          this.encoderJoint1 = this.targetAngleJoint1;
+        } else {
+          this.encoderJoint1 += this.angleSpeed;
+        }
+      } else if (this.encoderJoint1 > this.targetAngleJoint1) {
+        if (this.encoderJoint1 - this.angleSpeed < this.targetAngleJoint1) {
+          this.encoderJoint1 = this.targetAngleJoint1;
+        } else {
+          this.encoderJoint1 -= this.angleSpeed;
+        }
+      }
 
-      if (this.encoderJoint1 === this.targetAngleJoint1 && this.encoderJoint2 === this.targetAngleJoint2) {
+      if (this.encoderJoint2 < this.targetAngleJoint2) {
+        if (this.encoderJoint2 + this.angleSpeed > this.targetAngleJoint2) {
+          this.encoderJoint2 = this.targetAngleJoint2;
+        } else {
+          this.encoderJoint2 += this.angleSpeed;
+        }
+      } else if (this.encoderJoint2 > this.targetAngleJoint2) {
+        if (this.encoderJoint2 - this.angleSpeed < this.targetAngleJoint2) {
+          this.encoderJoint2 = this.targetAngleJoint2;
+        } else {
+          this.encoderJoint2 -= this.angleSpeed;
+        }
+      }
+
+      if (
+        this.encoderJoint1 === this.targetAngleJoint1 &&
+        this.encoderJoint2 === this.targetAngleJoint2 
+      ) {
         clearInterval(this.repeat);
         this.repeat = null;
       }
     }, 50);
   }
-
-  moveBySpeed(speedJoint1, speedJoint2) {
-    if (this.repeat) clearInterval(this.repeat);
-
-    this.speedJoint1 = speedJoint1;
-    this.speedJoint2 = speedJoint2;
-
-    this.repeat = setInterval(() => {
-      this.encoderJoint1 = Math.min(Math.max(this.encoderJoint1 + this.speedJoint1, this.#minEncoderJoint1), this.#maxEncoderJoint1);
-      this.encoderJoint2 = Math.min(Math.max(this.encoderJoint2 + this.speedJoint2, this.#minEncoderJoint2), this.#maxEncoderJoint2);
-    }, 50);
-  }
 }
 
-// 인스턴스 생성
-const monkey = new Monkey2Joint(4);
+// --------인스턴스-------------
+const monkey = new Monkey(4);
 
-// serialize: 제어 입력 반영
+let wait, wait_forever;
+
+async function setup(spine) {
+  const wait = function (n) { // n초 만큼 기다리는 Promise 반환
+    return new Promise((r) => setTimeout(r, n));
+  };
+
+  const wait_forever = function () { // 무한 대기 함수
+    return wait(0x7fffffff);
+  };
+
+  $('mode').d = 1; // 각도 기반 모드
+  $('joint.max_speed').d = 100;
+  $('joint.angles').d = [0, 0];
+  await wait(3000);
+}
+
 function serialize() {
-  const mode = $('mode').d;
+//   if (dongle != null) {
+//     return;
+//   }
 
-  switch (mode) {
-    case 0: // speed control
-      monkey.moveBySpeed($('speed.joint_1').d, $('speed.joint_2').d);
-      break;
-    case 1: // angle control
-      monkey.angleSpeed = $('joint.max_speed').d;
-      monkey.moveByAngle($('joint.angles').d[0], $('joint.angles').d[1]);
-      break;
-  }
+  // set control mode
+    let angleSpeed = $('joint.max_speed').d;
+    monkey.angleSpeed = angleSpeed;
+
+    let angles = $('joint.angles').d;
+    monkey.moveByAngle(angles[0], angles[1]);
+    return;
 }
 
-// deserialize: 센서값 업데이트
+
 function deserialize() {
   $('encoder.joint_1').d = Number(monkey.encoderJoint1.toFixed(3));
   $('encoder.joint_2').d = Number(monkey.encoderJoint2.toFixed(3));
   $('encoder.encoders').d = [$('encoder.joint_1').d, $('encoder.joint_2').d];
 }
 
-// loop는 필요 시 작성
+// put control code here, to run repeatedly
 function loop() {}
