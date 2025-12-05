@@ -45,9 +45,9 @@ function createButton(parent, cfg, id, label) {
 
 // 팝업에 J1/J2/Speed 슬라이더 + 버튼 표시
 function dashboard() {
-  w2popup.resize(400, 220);
+  w2popup.resize(400, 440);
   window.onresize = () => {
-    w2popup.resize(400, 220);
+    w2popup.resize(400, 440);
   };
   w2popup.on("close", () => {
     // 키보드 이벤트 같은 거 더 이상 안 씀
@@ -60,7 +60,7 @@ function dashboard() {
   const frame = popup_box
     .append("svg")
     .attr("width", 400)
-    .attr("height", 260)
+    .attr("height", 440)
     .style("background", "#fff")
     .style("border", "1px solid #ddd");
 
@@ -82,7 +82,7 @@ function dashboard() {
     .attr("y", 70)
     .attr("font-size", "12px")
     .text("J2 (deg)");
-  createSlider(J2, [sliderWidth, sliderX, 60], "angle_J2", 0, 120, 0);
+  createSlider(J2, [sliderWidth, sliderX, 60], "angle_J2", -90, 10, 0);
 
   // J1 슬라이더
   const J1 = frame.append("g");
@@ -91,7 +91,7 @@ function dashboard() {
     .attr("y", 115)
     .attr("font-size", "12px")
     .text("J1 (deg)");
-  createSlider(J1, [sliderWidth, sliderX, 105], "angle_J1", -120, 120, 0);
+  createSlider(J1, [sliderWidth, sliderX, 105], "angle_J1", -30, 180, 0);
 
   // 속도 슬라이더
   const speed = frame.append("g");
@@ -103,53 +103,43 @@ function dashboard() {
     .text("Speed");
   createSlider(speed, [sliderWidth, sliderX, 150], "angle_speed", 0, 100, 100);
 
-// === Pen Up/Down 버튼 ===
-const penBtn = frame.append("g");
-createButton(penBtn, [100, 50, 200], "pen_toggle_btn", "Pen Up");
+  // === Pen Up/Down 버튼 ===
+  const penBtn = frame.append("g");
+  createButton(penBtn, [300, 50, 200], "pen_toggle_btn", "Pen Down");
 
-// 버튼 내부 상태
-let penIsDown = false;
+  // 버튼 내부 상태
+  let penIsDown = false;
 
-// 버튼 이벤트
-select("#pen_toggle_btn").on("click", () => {
-  penIsDown = !penIsDown;
+  // 버튼 이벤트
+  select("#pen_toggle_btn").on("click", () => {
+    penIsDown = !penIsDown;
 
-  // ★★★ 핵심: p5에서 쓰는 currentPen을 여기서 직접 바꿔준다
-  currentPen = penIsDown ? 1 : 0;
+    //  핵심: p5에서 쓰는 currentPen을 여기서 직접 바꿔준다
+    currentPen = penIsDown ? 1 : 0;
 
-  // 버튼 텍스트 변경
-  select("#pen_toggle_btn").text(penIsDown ? "Pen Down" : "Pen Up");
+    // 버튼 텍스트 변경
+    select("#pen_toggle_btn").text(penIsDown ? "Pen Up" : "Pen Down");
+    console.log("Pen toggled →", penIsDown ? "UP (0)" : "DOWN (1)");
+  });
 
-  console.log("Pen toggled →", penIsDown ? "DOWN (1)" : "UP (0)");
-});
-
-
-  // Monkey FK 버튼
+  // Erase 버튼
   const fkBtn = frame.append("g");
-  createButton(fkBtn, [120, 200, 240], "fk_draw_btn", "Monkey FK Draw");
+  createButton(fkBtn, [300, 50, 240], "erase_btn", "Erase");
+ 
+  select("#erase_btn").on("click", () => {
+      trailLayer.clear();
+  });
+
 
   // SVG Draw 버튼
   const drawBtn = frame.append("g");
-  createButton(drawBtn, [120, 200, 200], "svg_draw_btn", "SVG Draw");
+  createButton(drawBtn, [300, 50, 280], "svg_draw_btn", "SVG Draw");
 
-  // 버튼 이벤트  <-- 여기에 넣어야 한다
   select("#svg_draw_btn").on("click", () => {
-    // 기존 동작 유지
-    useSimpleFK = false;
-    pathPoints = [];
-    if (trailLayer) trailLayer.clear();
-
-    // === 드로잉 모드 진입 필수 코드 ===
+    // 재생 시작
     isPlaying = true;
-    useSvgAsMotion = true;
-    svgIndex = 0;
-
+    useJsonMotion = true;
     console.log("SVG drawing mode activated");
-  });
-
-  select("#fk_draw_btn").on("click", () => {
-    useSimpleFK = true;
-    pathPoints = [];
   });
 }
 
