@@ -45,9 +45,9 @@ function createButton(parent, cfg, id, label) {
 
 // 팝업에 J1/J2/Speed 슬라이더 + 버튼 표시
 function dashboard() {
-  w2popup.resize(400, 440);
+  w2popup.resize(450, 440);
   window.onresize = () => {
-    w2popup.resize(400, 440);
+    w2popup.resize(450, 550);
   };
   w2popup.on("close", () => {
     // 키보드 이벤트 같은 거 더 이상 안 씀
@@ -59,8 +59,8 @@ function dashboard() {
 
   const frame = popup_box
     .append("svg")
-    .attr("width", 400)
-    .attr("height", 440)
+    .attr("width", 450)
+    .attr("height", 550)
     .style("background", "#fff")
     .style("border", "1px solid #ddd");
 
@@ -75,33 +75,55 @@ function dashboard() {
   const sliderWidth = 260;
   const sliderX = 120;
 
-  // J2 슬라이더
-  const J2 = frame.append("g");
-  J2.append("text")
-    .attr("x", 15)
-    .attr("y", 70)
-    .attr("font-size", "12px")
-    .text("J2 (deg)");
-  createSlider(J2, [sliderWidth, sliderX, 60], "angle_J2", -90, 10, 0);
+    // J1 슬라이더
+const J1 = frame.append("g");
+J1.append("text")
+  .attr("x", 15)
+  .attr("y", 115)
+  .attr("font-size", "12px")
+  .text("J1 (deg)");
 
-  // J1 슬라이더
-  const J1 = frame.append("g");
-  J1.append("text")
-    .attr("x", 15)
-    .attr("y", 115)
-    .attr("font-size", "12px")
-    .text("J1 (deg)");
-  createSlider(J1, [sliderWidth, sliderX, 105], "angle_J1", -30, 180, 0);
+createSlider(J1, [sliderWidth, sliderX, 105], "angle_J1", -30, 180, 0);
 
-  // 속도 슬라이더
-  const speed = frame.append("g");
-  speed
-    .append("text")
-    .attr("x", 15)
-    .attr("y", 160)
-    .attr("font-size", "12px")
-    .text("Speed");
-  createSlider(speed, [sliderWidth, sliderX, 150], "angle_speed", 0, 100, 100);
+//  J1 값 표시 UI 추가
+J1.append("foreignObject")
+  .attr("x", sliderX + sliderWidth + 5)
+  .attr("y", 105)
+  .attr("width", 40)
+  .attr("height", 30)
+  .html(`<div id="angle_J1_val" 
+          style="font-size:14px; padding-top:4px;">0°</div>`);
+
+//  실시간 업데이트 이벤트
+select("#angle_J1").on("input", function () {
+  select("#angle_J1_val").html(`${this.value}°`);
+});
+
+
+    // J2 슬라이더
+const J2 = frame.append("g");
+J2.append("text")
+  .attr("x", 15)
+  .attr("y", 70)
+  .attr("font-size", "12px")
+  .text("J2 (deg)");
+
+createSlider(J2, [sliderWidth, sliderX, 60], "angle_J2", -90, 10, 0);
+
+//  J2 값 표시 UI 추가
+J2.append("foreignObject")
+  .attr("x", sliderX + sliderWidth + 5)
+  .attr("y", 60)
+  .attr("width", 40)
+  .attr("height", 30)
+  .html(`<div id="angle_J2_val" 
+          style="font-size:14px; padding-top:4px;">0°</div>`);
+
+//  실시간 업데이트 이벤트
+select("#angle_J2").on("input", function () {
+  select("#angle_J2_val").html(`${this.value}°`);
+});
+
 
   // === Pen Up/Down 버튼 ===
   const penBtn = frame.append("g");
@@ -143,12 +165,6 @@ function dashboard() {
   });
 }
 
-// // === 제어 로직 ===
-// let init = false;
-// // angles[0] = J1, angles[1] = J2
-// let angles = [0, 0];
-// // 모드 전환용 변수, false = SVG, true = Monkey FK 모드
-// let useSimpleFK = false;
 
 function control() {
   // 1) 첫 호출에서 엔코더 값으로 초기화
