@@ -125,7 +125,9 @@ function openRobotPopup() {
 
 
 function playJsonStep() {
-  if (jsonIndex >= motionJson.length) return;
+  if (jsonIndex >= motionJson.length){
+    return;
+  }
 
   const cmd = motionJson[jsonIndex];
 
@@ -282,7 +284,10 @@ function buildMotionJsonFromSvg() {
     prevJ1Deg = ik.joint1;
     prevJ2Deg = ik.joint2;
   }
-
+  if (prevPen !== 0) {
+    motionJson.push({ d1: 0, d2: 0, pen: 0 });
+    prevPen = 0;
+  }
   jsonBuilt = true;
   
   console.log(`motionJson 생성 완료!`);
