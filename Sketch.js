@@ -320,6 +320,51 @@ function plotEncode(motionJson) {
   return out; // 완성된 1차원 바이트 배열 반환
 }
 
+/**
+ * nibble → d1/d2 값으로 역변환
+ */
+function decodeNibble(n) {
+  const map = {
+    0b1001: -7, 0b1010: -6, 0b1011: -5, 0b1100: -4,
+    0b1101: -3, 0b1110: -2, 0b1111: -1, 0b0000: 0,
+    0b0001: 1, 0b0010: 2, 0b0011: 3, 0b0100: 4,
+    0b0101: 5, 0b0110: 6, 0b0111: 7
+  };
+  return map[n];
+}
+
+/**
+ * 1바이트 → (d1,d2)
+ */
+function decodeDeltaByte(byte) {
+  const hi = (byte >> 4) & 0b1111;
+  const lo = byte & 0b1111;
+  return { d1: decodeNibble(hi), d2: decodeNibble(lo) };
+}
+
+/**
+ * plotEncode 배열 → motionJson 배열 역변환
+ */
+function plotDecode(byteArray) {
+  const out = [];
+  let currentPen = 0; // 기본 펜 상태
+
+  for (let i = 0; i < byteArray.length; i++) {
+    const b = byteArray[i];
+
+    if (b === 0x80) {       // pen down
+      currentPen = 1;
+    } else if (b === 0x08) { // pen up
+      currentPen = 0;
+    } else {
+      const { d1, d2 } = decodeDeltaByte(b);
+      out.push({ d1, d2, pen: currentPen });
+    }
+  }
+
+  return out;
+}
+
 
   // SVG 경로
   const totalPoints = svgPathPoints.length;
@@ -366,17 +411,35 @@ function plotEncode(motionJson) {
   console.log(JSON.stringify(motionJson));
   console.log("=== JSON 출력 끝 ===");
 
-    try {
+// ===============================
+// 1) plotEncode
+try {
   const plot = plotEncode(motionJson);
 
   console.log("=== plot 출력 시작 ===");
-  console.log(JSON.stringify(plot.map(b => "0x" + b.toString(16).padStart(2,"0")))); // 10진수 배열
+  console.log(JSON.stringify(plot.map(b => "0x" + b.toString(16).padStart(2,"0"))));
   //console.log(JSON.stringify(plot)); // 10진수 배열
   console.log("=== plot 출력 끝 ===");
 
 } catch (err) {
   console.error("plotEncode 오류:", err);
 }
+
+// ===============================
+// 2) plotDecode 테스트
+try {
+  // plotEncode 결과를 다시 입력으로 사용
+  const plot = plotEncode(motionJson); 
+  const decodedJson = plotDecode(plot);
+
+  console.log("=== plot 역변환 출력 시작 ===");
+  console.log(JSON.stringify(decodedJson, null, 2)); // 보기 좋게 들여쓰기
+  console.log("=== plot 역변환 출력 끝 ===");
+
+} catch (err) {
+  console.error("plotDecode 오류:", err);
+}
+
   
 }
 
