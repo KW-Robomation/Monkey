@@ -15,7 +15,7 @@ function normalizeAngle(angle) {
 }
 // 시간 보장 변수
 let lastJsonStepTime = 0;
-const JSON_STEP_MS = 10;
+const JSON_STEP_MS = 1;
 
 // =======================
 // 로봇 JSON 관련 전역
@@ -46,7 +46,7 @@ let svgPathPoints = [];    // 최종: 로봇 좌표계 (x, y, pen)
 
 // scale x,y offset
 let Xoffset = +140;
-let Yoffset = -50;
+let Yoffset = -40;
 
 // 이미지 기준 기본 각도
 let upperRestAngle = 0; // upperarm 이미지 기울어진 각도
@@ -254,6 +254,72 @@ function buildMotionJsonFromSvg() {
       console.error("첫 포인트가 작업 영역 밖입니다!");
     }
   }
+  
+/*
+ 숫자(-7 ~ 7)를 4비트 값으로 바꾸는 함수
+ -7부터 7까지 숫자를 각각 4자리 2진수로 매핑
+ */
+function encodeNibble(d) {
+  const map = {
+    "-7": 0b1001, "-6": 0b1010, "-5": 0b1011, "-4": 0b1100,
+    "-3": 0b1101, "-2": 0b1110, "-1": 0b1111,  "0": 0b0000,
+     "1": 0b0001,  "2": 0b0010,  "3": 0b0011, "4": 0b0100,
+     "5": 0b0101,  "6": 0b0110,  "7": 0b0111
+  };
+  return map[d];
+}
+
+/**
+ * d1, d2는 로봇 관절의 동작 변화량 단위
+ * 두 숫자를 한 바이트로 저장
+ * - hi 4비트: d1
+ * - lo 4비트: d2
+ */
+function encodeDeltaByte(d1, d2) {
+  const hi = encodeNibble(d1); // d1를 4비트로 바꿈
+  const lo = encodeNibble(d2); // d2를 4비트로 바꿈
+  return (hi << 4) | lo;       // hi를 왼쪽으로 4칸 밀고, lo와 합치기
+}
+
+/*
+ motionJson에는 [{d1, d2, pen}, ...] 형태로 움직임과 펜 상태 내포
+ motionJson 배열을 1차원 바이트 배열로 바꿔주는 함수 
+ * 작동 순서:
+ * 1) 펜 상태가 바뀌면 특별한 값으로 표시
+ *    - 0x80 : Pen Down
+ *    - 0x08 : Pen Up
+ * 2) d1, d2 움직임은 encodeDeltaByte()로 1바이트로 변환
+ */
+function plotEncode(motionJson) {
+  if (!Array.isArray(motionJson)) {
+    throw new Error("plotEncode: motionJson must be an array");
+  }
+
+  const out = [];                 // 최종 결과를 담을 배열
+  let prevPen = motionJson[0]?.pen ?? 0; // 이전 펜 상태 기억
+
+  for (let i = 0; i < motionJson.length; i++) {
+    const cmd = motionJson[i];
+    const pen = cmd.pen;
+
+    // 펜 상태가 이전과 다르면, 바뀐 상태를 먼저 기록
+    if (pen !== prevPen) {
+      if (pen === 1) {
+        out.push(0x80); // 펜 내리기
+      } else {
+        out.push(0x08); // 펜 올리기
+      }
+      prevPen = pen; // 펜 상태 갱신
+    }
+
+    // d1, d2 움직임을 1바이트로 변환하여 배열에 추가
+    const byte = encodeDeltaByte(cmd.d1, cmd.d2);
+    out.push(byte);
+  }
+
+  return out; // 완성된 1차원 바이트 배열 반환
+}
+
 
   // SVG 경로
   const totalPoints = svgPathPoints.length;
@@ -299,6 +365,19 @@ function buildMotionJsonFromSvg() {
   console.log("=== JSON 출력 시작 ===");
   console.log(JSON.stringify(motionJson));
   console.log("=== JSON 출력 끝 ===");
+
+    try {
+  const plot = plotEncode(motionJson);
+
+  console.log("=== plot 출력 시작 ===");
+  console.log(JSON.stringify(plot.map(b => "0x" + b.toString(16).padStart(2,"0")))); // 10진수 배열
+  //console.log(plot.map(b => "0x" + b.toString(16).padStart(2,"0"))); // 16진수 버전
+  console.log("=== plot 출력 끝 ===");
+
+} catch (err) {
+  console.error("plotEncode 오류:", err);
+}
+  
 }
 
 // p5 setup 함수
