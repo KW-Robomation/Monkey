@@ -13,6 +13,9 @@ function normalizeAngle(angle) {
   while (angle < -180) angle += 360;
   return angle;
 }
+// 시간 보장 변수
+let lastJsonStepTime = 0;
+const JSON_STEP_MS = 10;
 
 // =======================
 // 로봇 JSON 관련 전역
@@ -1045,8 +1048,11 @@ function drawSimulator(p) {
 
   // 1) 모션 소스 선택 (JSON or SVG)
   if (isPlaying && motionJson.length > 0) {
-    // 로봇 JSON 기준 재생
-    playJsonStep();
+    const now = p.millis();
+    if(now - lastJsonStepTime  >= JSON_STEP_MS ) {
+      playJsonStep();
+      lastJsonStepTime  = now;  
+    }
   }
 
   // 2) Forward Kinematics (현재 joint 각도로 포즈 계산)
