@@ -371,7 +371,7 @@ function plotEncode(motionJson) {
 
   console.log("=== plot 출력 시작 ===");
   console.log(JSON.stringify(plot.map(b => "0x" + b.toString(16).padStart(2,"0")))); // 10진수 배열
-  //console.log(plot.map(b => "0x" + b.toString(16).padStart(2,"0"))); // 16진수 버전
+  //console.log(JSON.stringify(plot)); // 10진수 배열
   console.log("=== plot 출력 끝 ===");
 
 } catch (err) {
