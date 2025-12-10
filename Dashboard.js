@@ -160,7 +160,21 @@ select("#angle_J2").on("input", function () {
   select("#svg_draw_btn").on("click", () => {
     // 재생 시작
     $("mode").d = 1;
+    startJsonPlayback();
+    $("encoder.joint_1").d = currentAngleJoint1;
+    $("encoder.joint_2").d = currentAngleJoint2;
     console.log("SVG drawing mode activated");
+  });
+
+  const manualBtn = frame.append("g");
+  createButton(manualBtn, [300, 50, 320], "draw_manual_btn", "Draw Manual");
+
+  select("#draw_manual_btn").on("click", () => {
+    // 재생 시작
+    $("mode").d = 0;
+    currentPen = 0;
+
+    console.log("manual drawing mode activated");
   });
 }
 

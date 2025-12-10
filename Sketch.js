@@ -32,7 +32,7 @@ let jsonIndex     = 0;
 let STEP_DEG = 0.01; // 1스탭당 몇도인지
 const MAX_STEPS_PT   = 7;                 // point -> point 최대 7 step
 const MAX_DELTA_DEG  = STEP_DEG * MAX_STEPS_PT; // 0.07도
-const JOINT2_OFFSET = 140; // joint2가 0도일 때, 팔이 ㄷ자 모양이 되도록 오프셋 각도
+const JOINT2_OFFSET = 143; // joint2가 0도일 때, 팔이 ㄷ자 모양이 되도록 오프셋 각도
 
 
 let STEP          = 2; // SVG 길이 기준 샘플링 단위(px)
