@@ -31,7 +31,7 @@ let jsonIndex     = 0;
 // 기존 전역 변수들
 // =======================
 let STEP_DEG = 0.01; // 1스탭당 몇도인지
-const MAX_STEPS_PT   = 8;                 // point -> point 최대 8 step
+const MAX_STEPS_PT   = 7;                 // point -> point 최대 7 step
 const MAX_DELTA_DEG  = STEP_DEG * MAX_STEPS_PT; // 0.08도
 const JOINT2_OFFSET = 140;
 
