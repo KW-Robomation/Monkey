@@ -433,9 +433,15 @@ try {
   const decodedJson = plotDecode(plot);
 
   console.log("=== plot 역변환 출력 시작 ===");
-  console.log(JSON.stringify(decodedJson, null, 2)); // 보기 좋게 들여쓰기
+  //console.log(JSON.stringify(decodedJson, null, 2)); // 보기 좋게 들여쓰기
   console.log("=== plot 역변환 출력 끝 ===");
-
+  let is_match = true;
+  for(let i=0; i<motionJson.length; i++) {
+    if(motionJson[i].d1 !== decodedJson[i].d1 || motionJson[i].d2 !== decodedJson[i].d2 || motionJson[i].pen !== decodedJson[i].pen) {
+      is_match = false;
+    }
+  }
+  console.log("역변환 일치 여부:", is_match ? "일치" : "불일치");
 } catch (err) {
   console.error("plotDecode 오류:", err);
 }
