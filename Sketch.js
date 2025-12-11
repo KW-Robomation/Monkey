@@ -1291,16 +1291,16 @@ const y3 = y2 + link2Length * p.sin(theta1_fk + theta2);
   p.push();
   p.fill(0);
   p.textSize(12);
-  p.text(`J1: ${$("encoder.joint_1").d} deg`, 50, 50);
+  p.text(`J1: ${(currentAngleJoint1).toFixed(2)} deg`, 50, 50);
   p.text(`J2: ${(currentAngleJoint2).toFixed(2)} deg`, 50, 70);
   p.text(`L1: ${link1Length.toFixed(0)}px`,   50, 90);
   p.text(`L2: ${link2Length.toFixed(0)}px`,   50, 110);
 
   p.text(isPlaying ? "Playing" : "Paused", 50, 150);
   p.text(`Pen: ${currentPen}`,              50, 170);
-  p.text(`MIN J1: ${minJoint1}`,            50, 290);
-  p.text(`MAX J1: ${maxJoint1}`,            50, 310);
-  p.text(`MIN J2: ${minJoint2}`,            50, 330);
-  p.text(`MAX J2: ${maxJoint2}`,            50, 350);
+  p.text(`MIN J1: ${minJoint1.toFixed(2)}`,            50, 290);
+  p.text(`MAX J1: ${maxJoint1.toFixed(2)}`,            50, 310);
+  p.text(`MIN J2: ${minJoint2.toFixed(2)}`,            50, 330);
+  p.text(`MAX J2: ${maxJoint2.toFixed(2)}`,            50, 350);
   p.pop();
 }
