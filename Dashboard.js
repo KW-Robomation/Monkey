@@ -13,6 +13,9 @@ let targetAngles = [0, 0];
 
 let useSimpleFK = false;
 
+// 키 입력에 따른 변화량 (degree 단위)
+const KEY_STEP = 1.5;  // 너무 빠르면 줄이기/늘리기
+
 function createSlider(parent, cfg, id, min, max, initial) {
   const [W, X, Y] = cfg;
 
@@ -85,7 +88,7 @@ function dashboard() {
     .attr("x", 15)
     .attr("y", 115)
     .attr("font-size", "12px")
-    .text("J1 (deg)");
+    .text("J1 ← →");
 
   createSlider(J1, [sliderWidth, sliderX, 105], "angle_J1", -30, 180, 0);
 
@@ -109,7 +112,7 @@ function dashboard() {
     .attr("x", 15)
     .attr("y", 70)
     .attr("font-size", "12px")
-    .text("J2 (deg)");
+    .text("J2 ↑ ↓");
 
   createSlider(J2, [sliderWidth, sliderX, 60], "angle_J2", -90, 10, 0);
 
@@ -179,6 +182,63 @@ function dashboard() {
     console.log("manual drawing mode activated");
   });
 }
+
+
+// === 키보드 제어 추가 ===
+
+
+window.addEventListener("keydown", (e) => {
+
+  let changed = false;
+
+  switch (e.key) {
+    case "ArrowLeft":   // J1 --
+      targetAngles[0] -= KEY_STEP;
+      changed = true;
+      break;
+
+    case "ArrowRight":  // J1 ++
+      targetAngles[0] += KEY_STEP;
+      changed = true;
+      break;
+
+    case "ArrowUp":     // J2 ++
+      targetAngles[1] += KEY_STEP;
+      changed = true;
+      break;
+
+    case "ArrowDown":   // J2 --
+      targetAngles[1] -= KEY_STEP;
+      changed = true;
+      break;
+
+    default:
+      return; // 다른 키는 무시
+  }
+
+  // 변경 없으면 종료
+  if (!changed) return;
+
+  // --- 각도 제한 ---
+  targetAngles[0] = Math.max(-30, Math.min(180, targetAngles[0])); // J1
+  targetAngles[1] = Math.max(-90, Math.min(10, targetAngles[1]));  // J2
+
+  // --- 슬라이더도 업데이트 ---
+  if (select("#angle_J1").node()) {
+    select("#angle_J1").property("value", targetAngles[0]);
+    select("#angle_J1_val").html(targetAngles[0].toFixed(1) + "°");
+  }
+
+  if (select("#angle_J2").node()) {
+    select("#angle_J2").property("value", targetAngles[1]);
+    select("#angle_J2_val").html(targetAngles[1].toFixed(1) + "°");
+  }
+
+  // 방향키의 기본동작(스크롤 등) 방지
+  e.preventDefault();
+});
+
+
 
 function control() {
   // 1) 첫 호출에서 엔코더 값으로 초기화
