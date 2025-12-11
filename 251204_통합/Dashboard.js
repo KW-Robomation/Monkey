@@ -7,6 +7,10 @@ let init = false;
 // angles[0] = J1, angles[1] = J2
 let angles = [0, 0];
 // 모드 전환용 변수, false = SVG, true = Monkey FK 모드
+
+// 슬라이더가 지정하는 목표 각도
+let targetAngles = [0, 0];
+
 let useSimpleFK = false;
 
 function createSlider(parent, cfg, id, min, max, initial) {
@@ -75,57 +79,56 @@ function dashboard() {
   const sliderWidth = 260;
   const sliderX = 120;
 
-    // J1 슬라이더
-const J1 = frame.append("g");
-J1.append("text")
-  .attr("x", 15)
-  .attr("y", 115)
-  .attr("font-size", "12px")
-  .text("J1 (deg)");
+  // J1 슬라이더 -----------------------------------------------------------------
+  const J1 = frame.append("g");
+  J1.append("text")
+    .attr("x", 15)
+    .attr("y", 115)
+    .attr("font-size", "12px")
+    .text("J1 (deg)");
 
-createSlider(J1, [sliderWidth, sliderX, 105], "angle_J1", -30, 180, 0);
+  createSlider(J1, [sliderWidth, sliderX, 105], "angle_J1", -30, 180, 0);
 
-//  J1 값 표시 UI 추가
-J1.append("foreignObject")
-  .attr("x", sliderX + sliderWidth + 5)
-  .attr("y", 105)
-  .attr("width", 40)
-  .attr("height", 30)
-  .html(`<div id="angle_J1_val" 
+  //  J1 값 표시 UI 추가
+  J1.append("foreignObject")
+    .attr("x", sliderX + sliderWidth + 5)
+    .attr("y", 105)
+    .attr("width", 40)
+    .attr("height", 30).html(`<div id="angle_J1_val" 
           style="font-size:14px; padding-top:4px;">0°</div>`);
 
-//  실시간 업데이트 이벤트
-select("#angle_J1").on("input", function () {
-  select("#angle_J1_val").html(`${this.value}°`);
-});
+  //  실시간 업데이트 이벤트
+  select("#angle_J1").on("input", function () {
+    select("#angle_J1_val").html(`${this.value}°`);
+    targetAngles[0] = parseFloat(this.value);
+  });
 
+  // J2 슬라이더 -----------------------------------------------------------------
+  const J2 = frame.append("g");
+  J2.append("text")
+    .attr("x", 15)
+    .attr("y", 70)
+    .attr("font-size", "12px")
+    .text("J2 (deg)");
 
-    // J2 슬라이더
-const J2 = frame.append("g");
-J2.append("text")
-  .attr("x", 15)
-  .attr("y", 70)
-  .attr("font-size", "12px")
-  .text("J2 (deg)");
+  createSlider(J2, [sliderWidth, sliderX, 60], "angle_J2", -90, 10, 0);
 
-createSlider(J2, [sliderWidth, sliderX, 60], "angle_J2", -90, 10, 0);
-
-//  J2 값 표시 UI 추가
-J2.append("foreignObject")
-  .attr("x", sliderX + sliderWidth + 5)
-  .attr("y", 60)
-  .attr("width", 40)
-  .attr("height", 30)
-  .html(`<div id="angle_J2_val" 
+  //  J2 값 표시 UI 추가
+  J2.append("foreignObject")
+    .attr("x", sliderX + sliderWidth + 5)
+    .attr("y", 60)
+    .attr("width", 40)
+    .attr("height", 30).html(`<div id="angle_J2_val" 
           style="font-size:14px; padding-top:4px;">0°</div>`);
 
-//  실시간 업데이트 이벤트
-select("#angle_J2").on("input", function () {
-  select("#angle_J2_val").html(`${this.value}°`);
-});
+  //  실시간 업데이트 이벤트
+  select("#angle_J2").on("input", function () {
+    select("#angle_J2_val").html(`${this.value}°`);
 
+    targetAngles[1] = parseFloat(this.value);
+  });
 
-  // === Pen Up/Down 버튼 ===
+  //   Pen Up/Down 버튼  -----------------------------------------------------------------
   const penBtn = frame.append("g");
   createButton(penBtn, [300, 50, 200], "pen_toggle_btn", "Pen Down");
 
@@ -144,27 +147,38 @@ select("#angle_J2").on("input", function () {
     console.log("Pen toggled →", penIsDown ? "UP (0)" : "DOWN (1)");
   });
 
-  // Erase 버튼
+  // Erase 버튼  -----------------------------------------------------------------
   const fkBtn = frame.append("g");
   createButton(fkBtn, [300, 50, 240], "erase_btn", "Erase");
- 
+
   select("#erase_btn").on("click", () => {
-      trailLayer.clear();
+    trailLayer.clear();
   });
 
-
-  // SVG Draw 버튼
+  // SVG Draw 버튼  -----------------------------------------------------------------
   const drawBtn = frame.append("g");
   createButton(drawBtn, [300, 50, 280], "svg_draw_btn", "SVG Draw");
 
   select("#svg_draw_btn").on("click", () => {
     // 재생 시작
-    isPlaying = true;
-    useJsonMotion = true;
+    $("mode").d = 1;
+    startJsonPlayback();
+    $("encoder.joint_1").d = currentAngleJoint1;
+    $("encoder.joint_2").d = currentAngleJoint2;
     console.log("SVG drawing mode activated");
   });
-}
 
+  const manualBtn = frame.append("g");
+  createButton(manualBtn, [300, 50, 320], "draw_manual_btn", "Draw Manual");
+
+  select("#draw_manual_btn").on("click", () => {
+    // 재생 시작
+    $("mode").d = 0;
+    currentPen = 0;
+
+    console.log("manual drawing mode activated");
+  });
+}
 
 function control() {
   // 1) 첫 호출에서 엔코더 값으로 초기화
@@ -198,9 +212,10 @@ function control() {
     $("encoder.joint_2").d = parseInt(select("#angle_J2").property("value"));
   }
 
-  // 3) 속도 슬라이더 → joint.max_speed
-  if (select("#angle_speed").node()) {
-    $("joint.max_speed").d =
-      parseInt(select("#angle_speed").property("value")) || 100;
+  let lerpSpeed = 0.05; // 0~1, 클수록 빠름
+  for (let i = 0; i < 2; i++) {
+    angles[i] = angles[i] + (targetAngles[i] - angles[i]) * lerpSpeed;
   }
+  $("encoder.joint_1").d = Math.round(angles[0]);
+  $("encoder.joint_2").d = Math.round(angles[1]);
 }
