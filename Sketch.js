@@ -32,7 +32,7 @@ let jsonIndex = 0;
 // =======================
 // 기존 전역 변수들
 // =======================
-let STEP_DEG = 0.01; // 1스탭당 몇도인지
+let STEP_DEG = 0.010986328; // 1스탭당 몇도인지(실제 스탭 각도 기준)
 const MAX_STEPS_PT = 7; // point -> point 최대 7 step
 const MAX_DELTA_DEG = STEP_DEG * MAX_STEPS_PT; // 0.07도
 const JOINT2_OFFSET = 143; // joint2가 0도일 때, 팔이 ㄷ자 모양이 되도록 오프셋 각도
