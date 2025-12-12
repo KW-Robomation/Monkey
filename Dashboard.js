@@ -181,6 +181,19 @@ function dashboard() {
 
     console.log("manual drawing mode activated");
   });
+
+  const drawDoubleBtm = frame.append("g");
+  createButton(drawDoubleBtm, [300, 50, 360], "svg_draw_double_btn", "SVG Draw Double");
+
+  select("#svg_draw_double_btn").on("click", () => {
+    // 재생 시작
+    $("mode").d = 2;
+    currentPen = 0;
+    startJsonPlayback();
+    $("encoder.joint_1").d = currentAngleJoint1;
+    $("encoder.joint_2").d = currentAngleJoint2;
+    console.log("SVG drawing Double mode activated");
+  });
 }
 
 
