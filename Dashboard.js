@@ -15,6 +15,10 @@ let useSimpleFK = false;
 
 // 키 입력에 따른 변화량 (degree 단위)
 const KEY_STEP = 1.5;  // 너무 빠르면 줄이기/늘리기
+// SVG 드롭 상태 표시
+let lastSvgName = "(none)";
+let lastSvgSize = 0;
+let lastSvgStatus = "No SVG loaded";
 
 function createSlider(parent, cfg, id, min, max, initial) {
   const [W, X, Y] = cfg;
@@ -37,24 +41,22 @@ function createSlider(parent, cfg, id, min, max, initial) {
 }
 
 // 버튼 생성기 (HTML button)
-function createButton(parent, cfg, id, label) {
+function createButton(parent, cfg, id, label, onClick) {
   const [W, X, Y] = cfg;
 
-  parent
-    .append("foreignObject")
-    .attr("x", X)
-    .attr("y", Y)
-    .attr("width", W)
-    .attr("height", 30).html(`
-            <button id="${id}" style="width:${W}px; height:28px;">${label}</button>
-        `);
+  parent.append("foreignObject")
+    .attr("x", X).attr("y", Y)
+    .attr("width", W).attr("height", 30)
+    .html(`<button id="${id}" style="width:${W}px; height:28px;">${label}</button>`);
+
+  if (onClick) select("#" + id).on("click", onClick);
 }
 
 // 팝업에 J1/J2/Speed 슬라이더 + 버튼 표시
 function dashboard() {
-  w2popup.resize(450, 440);
+  w2popup.resize(470, 610);
   window.onresize = () => {
-    w2popup.resize(450, 550);
+    w2popup.resize(470, 610);
   };
   w2popup.on("close", () => {
     // 키보드 이벤트 같은 거 더 이상 안 씀
@@ -63,6 +65,8 @@ function dashboard() {
   const popup_box = select("#dashboard");
   popup_box.html(""); // 기존 내용 싹 지우기
   popup_box.style("user_select", "none");
+
+  setupSvgDragDrop(popup_box);
 
   const frame = popup_box
     .append("svg")
@@ -75,10 +79,35 @@ function dashboard() {
   frame
     .append("text")
     .attr("x", 15)
-    .attr("y", 25)
+    .attr("y", 95)
     .attr("font-size", "12px")
     .text("J1 / J2 Joint Angle Control");
 
+ // === SVG Drag & Drop 안내 영역 ==========================================
+  frame.append("rect")
+    .attr("x", 15)
+    .attr("y", 15)
+    .attr("width", 420)
+    .attr("height", 55)
+    .attr("rx", 8)
+    .attr("fill", "#f7fbff")
+    .attr("stroke", "#4aa3ff")
+    .attr("stroke-dasharray", "6 4");
+
+  frame.append("text")
+    .attr("x", 25)
+    .attr("y", 38)
+    .attr("font-size", "12px")
+    .attr("fill", "#2a7fd6")
+    .text("여기로 SVG 파일을 드래그 & 드롭하세요");
+
+  frame.append("text")
+    .attr("id", "svg_status_text")
+    .attr("x", 25)
+    .attr("y", 58)
+    .attr("font-size", "11px")
+    .attr("fill", "#333")
+    .text(`SVG: ${lastSvgName} | ${lastSvgStatus}`);
   const sliderWidth = 260;
   const sliderX = 120;
 
@@ -86,16 +115,16 @@ function dashboard() {
   const J1 = frame.append("g");
   J1.append("text")
     .attr("x", 15)
-    .attr("y", 115)
+    .attr("y", 185)
     .attr("font-size", "12px")
     .text("J1 ← →");
 
-  createSlider(J1, [sliderWidth, sliderX, 105], "angle_J1", -30, 180, 0);
+  createSlider(J1, [sliderWidth, sliderX, 175], "angle_J1", -30, 180, 0);
 
   //  J1 값 표시 UI 추가
   J1.append("foreignObject")
     .attr("x", sliderX + sliderWidth + 5)
-    .attr("y", 105)
+    .attr("y", 175)
     .attr("width", 40)
     .attr("height", 30).html(`<div id="angle_J1_val" 
           style="font-size:14px; padding-top:4px;">0°</div>`);
@@ -110,16 +139,16 @@ function dashboard() {
   const J2 = frame.append("g");
   J2.append("text")
     .attr("x", 15)
-    .attr("y", 70)
+    .attr("y", 140)
     .attr("font-size", "12px")
     .text("J2 ↑ ↓");
 
-  createSlider(J2, [sliderWidth, sliderX, 60], "angle_J2", -90, 10, 0);
+  createSlider(J2, [sliderWidth, sliderX, 130], "angle_J2", -90, 10, 0);
 
   //  J2 값 표시 UI 추가
   J2.append("foreignObject")
     .attr("x", sliderX + sliderWidth + 5)
-    .attr("y", 60)
+    .attr("y", 130)
     .attr("width", 40)
     .attr("height", 30).html(`<div id="angle_J2_val" 
           style="font-size:14px; padding-top:4px;">0°</div>`);
@@ -133,7 +162,7 @@ function dashboard() {
 
   //   Pen Up/Down 버튼  -----------------------------------------------------------------
   const penBtn = frame.append("g");
-  createButton(penBtn, [300, 50, 200], "pen_toggle_btn", "Pen Down");
+  createButton(penBtn, [300, 50, 270], "pen_toggle_btn", "Pen Down");
 
   // 버튼 내부 상태
   let penIsDown = false;
@@ -152,7 +181,7 @@ function dashboard() {
 
   // Erase 버튼  -----------------------------------------------------------------
   const fkBtn = frame.append("g");
-  createButton(fkBtn, [300, 50, 240], "erase_btn", "Erase");
+  createButton(fkBtn, [300, 50, 310], "erase_btn", "Erase");
 
   select("#erase_btn").on("click", () => {
     trailLayer.clear();
@@ -160,7 +189,7 @@ function dashboard() {
 
   // SVG Draw 버튼  -----------------------------------------------------------------
   const drawBtn = frame.append("g");
-  createButton(drawBtn, [300, 50, 280], "svg_draw_btn", "SVG Draw");
+  createButton(drawBtn, [300, 50, 350], "svg_draw_btn", "SVG Draw");
 
   select("#svg_draw_btn").on("click", () => {
     // 재생 시작
@@ -172,7 +201,7 @@ function dashboard() {
   });
 
   const manualBtn = frame.append("g");
-  createButton(manualBtn, [300, 50, 320], "draw_manual_btn", "Draw Manual");
+  createButton(manualBtn, [300, 50, 390], "draw_manual_btn", "Draw Manual");
 
   select("#draw_manual_btn").on("click", () => {
     // 재생 시작
@@ -183,7 +212,7 @@ function dashboard() {
   });
 
   const drawDoubleBtm = frame.append("g");
-  createButton(drawDoubleBtm, [300, 50, 360], "svg_draw_double_btn", "SVG Draw Double");
+  createButton(drawDoubleBtm, [300, 50, 430], "svg_draw_double_btn", "SVG Draw Double");
 
   select("#svg_draw_double_btn").on("click", () => {
     // 재생 시작
@@ -194,12 +223,12 @@ function dashboard() {
     $("encoder.joint_2").d = currentAngleJoint2;
     console.log("SVG drawing Double mode activated");
   });
+
+  createButton(frame, [200, 20, 510], "download_json_btn", "Download JSON", () => {
+    downloadMotionJson("motionJson.json"); // ✅ 이 함수는 전역에 있어야 함 (Sketch.js에 두는 걸 추천)
+  });
 }
-
-
-// === 키보드 제어 추가 ===
-
-
+// === 키보드 이벤트 처리 ===
 window.addEventListener("keydown", (e) => {
 
   let changed = false;
@@ -251,8 +280,6 @@ window.addEventListener("keydown", (e) => {
   e.preventDefault();
 });
 
-
-
 function control() {
   // 1) 첫 호출에서 엔코더 값으로 초기화
   if (!init) {
@@ -291,4 +318,96 @@ function control() {
   }
   $("encoder.joint_1").d = Math.round(angles[0]);
   $("encoder.joint_2").d = Math.round(angles[1]);
+}
+// === SVG 드래그 앤 드롭 처리 함수 ===
+function setupSvgDragDrop(popup_box_selection) {
+  const el = popup_box_selection.node();
+  if (!el) return;
+
+  // ✅ 이미 등록했으면 재등록 방지
+  if (el.__svg_drop_ready__) return;
+  el.__svg_drop_ready__ = true;
+
+  // 드래그 오버 시 기본 동작 막고 강조
+  el.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    el.style.outline = "3px dashed #4aa3ff";
+    el.style.outlineOffset = "6px";
+  });
+
+  // 드래그가 떠나면 강조 해제
+  el.addEventListener("dragleave", (e) => {
+    el.style.outline = "";
+    el.style.outlineOffset = "";
+  });
+
+  // ✅ 드롭 처리
+  el.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    el.style.outline = "";
+    el.style.outlineOffset = "";
+
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+
+    const isSvg =
+      (file.type === "image/svg+xml") ||
+      file.name.toLowerCase().endsWith(".svg");
+
+    if (!isSvg) {
+      lastSvgName = file.name || "(unknown)";
+      lastSvgSize = file.size || 0;
+      lastSvgStatus = "Not an SVG ❌";
+      const t = document.getElementById("svg_status_text");
+      if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
+      alert("SVG 파일만 드롭 가능!");
+      return;
+    }
+
+    // ✅ 로딩 시작 상태 표시
+    lastSvgName = file.name;
+    lastSvgSize = file.size || 0;
+    lastSvgStatus = "Loading...";
+    {
+      const t = document.getElementById("svg_status_text");
+      if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
+    }
+
+    try {
+      const svgText = await file.text();     // ✅ SVG 원문 읽기
+      window.currentSvgName = file.name;
+
+      // 아주 간단한 유효성 체크(옵션)
+      const looksLikeSvg = (svgText && svgText.includes("<svg"));
+      if (!looksLikeSvg) {
+        lastSvgStatus = "Invalid SVG text ❌";
+        const t = document.getElementById("svg_status_text");
+        if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
+        alert("SVG 텍스트가 올바르지 않습니다.");
+        return;
+      }
+
+      if (typeof window.rebuildFromSvgText === "function") {
+        window.rebuildFromSvgText(svgText); // ✅ Sketch 파이프라인 호출
+
+        // ✅ 성공 상태 표시
+        const kb = (lastSvgSize / 1024).toFixed(1);
+        lastSvgStatus = `Loaded ✅ (${kb} KB)`;
+        const t = document.getElementById("svg_status_text");
+        if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
+      } else {
+        lastSvgStatus = "rebuildFromSvgText() missing ❌";
+        const t = document.getElementById("svg_status_text");
+        if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
+        alert("rebuildFromSvgText()가 없습니다. Sketch.js에 전역 함수로 추가해줘.");
+      }
+    } catch (err) {
+      console.error(err);
+      lastSvgStatus = "Read failed ❌";
+      const t = document.getElementById("svg_status_text");
+      if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
+      alert("SVG 읽기 실패");
+    }
+  });
 }
