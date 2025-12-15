@@ -34,6 +34,8 @@ function fkPenXY_deg(j1Deg, j2Deg) {
 let lastJsonStepTime = 0;
 const JSON_STEP_MS = 1;
 
+const FAST_STEPS_PER_FRAME = 200; // 빠른 재생시 프레임당 최대 스텝 수
+let bakedOnce = false; // 한번에 그릴 것인지 여부
 // =======================
 // 로봇 JSON 관련 전역
 // =======================
@@ -165,12 +167,21 @@ function playJsonStep() {
   jsonIndex++;
 }
 
+function playJsonSteps(n) {
+  for (let i = 0; i < n; i++) {
+    if (jsonIndex >= motionJson.length) return false;
+    playJsonStep();
+  }
+  return true;
+}
+// 한번에 그리기 함수
 function startJsonPlayback(jsonData) {
   if (jsonData) {
     motionJson = jsonData;
   }
   jsonIndex = 0;
   isPlaying = false;
+  bakedOnce = false;
 
   // 초기화: 홈에서 시작한다고 가정 (필요하면 홈 각도로 바꾸기)
   currentAngleJoint1 = 0;
@@ -185,7 +196,51 @@ function startJsonPlayback(jsonData) {
     trailLayer.clear();
   }
 }
+function bakeAllToTrailLayer() {
+  if (bakedOnce) return;
+  bakedOnce = true;
 
+  // ✅ playback 상태만 수동 리셋
+  jsonIndex = 0;
+  currentAngleJoint1 = 0;
+  currentAngleJoint2 = 0;
+  currentPen = 0;
+
+  prevPenScreenX = null;
+  prevPenScreenY = null;
+  prevPenState = 0;
+
+  if (trailLayer) trailLayer.clear();
+
+  let prevX = null, prevY = null, prevPen = 0;
+
+  while (jsonIndex < motionJson.length) {
+    playJsonStep();
+
+    const pos = fkPenXY_deg(currentAngleJoint1, currentAngleJoint2);
+    const x = pos.x * scale;
+    const y = pos.y * scale;
+
+    if (prevX !== null && prevY !== null && prevPen === 1 && currentPen === 1) {
+      trailLayer.push();
+      trailLayer.stroke(255, 0, 0);
+      trailLayer.strokeWeight(2);
+      trailLayer.line(prevX, prevY, x, y);
+      trailLayer.pop();
+    }
+
+    prevX = x;
+    prevY = y;
+    prevPen = currentPen;
+  }
+
+  isPlaying = false;
+  $("mode").d = 0; 
+  currentPen = 0;
+  prevPenState = 0;
+  prevPenScreenX = null;
+  prevPenScreenY = null;  // ✅ 끝나면 수동 모드로
+}
 function buildMotionJsonFromSvg() {
   if (jsonBuilt) return;
   if (!svgPathPoints || svgPathPoints.length === 0) return;
@@ -1268,6 +1323,12 @@ function drawSimulator(p) {
   } else if (mode === 1) {
     // ---------- 자동 모드 ----------
     isPlaying = true;
+  } else if (mode === 2) {
+    // ---------- 빠르게 그리기 -------
+    isPlaying = true;
+  } else if (mode === 3) {
+    // ---------- 한번에 결과보기 -----
+    isPlaying = false;
   }
 
   // 배경
@@ -1282,11 +1343,18 @@ function drawSimulator(p) {
   p.scale(scale);
 
   // 1) 모션 소스 선택 (JSON or SVG)
-  if (isPlaying && motionJson.length > 0) {
-    const now = p.millis();
-    if (now - lastJsonStepTime >= JSON_STEP_MS) {
-      playJsonStep();
-      lastJsonStepTime = now;
+  if (motionJson.length > 0) {
+    if (mode === 3) {
+    }
+    else if (mode === 1) {
+      const now = p.millis();
+      if (now - lastJsonStepTime >= JSON_STEP_MS) {
+        playJsonStep();
+        lastJsonStepTime = now;
+      }
+    }
+    else if (mode === 2) {
+      playJsonSteps(FAST_STEPS_PER_FRAME);
     }
   }
 
@@ -1342,7 +1410,7 @@ function drawSimulator(p) {
   const penX = x3;
   const penY = y3;
 
-  if (trailLayer) {
+  if (trailLayer&& (mode === 1 || mode === 2)) {
     const penScreenX = penX * scale;
     const penScreenY = penY * scale;
 

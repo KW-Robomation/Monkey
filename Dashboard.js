@@ -224,6 +224,20 @@ function dashboard() {
     console.log("SVG drawing Double mode activated");
   });
 
+  const drawAllBtm = frame.append("g");
+  createButton(drawAllBtm, [300, 50, 470], "svg_draw_all_btn", "SVG Draw All");
+
+  select("#svg_draw_all_btn").on("click", () => {
+    // 재생 시작
+    $("mode").d = 3;
+    currentPen = 0;
+    startJsonPlayback();
+    bakeAllToTrailLayer(); 
+    $("encoder.joint_1").d = currentAngleJoint1;
+    $("encoder.joint_2").d = currentAngleJoint2;
+    console.log("SVG drawing Double mode activated");
+  });
+
   createButton(frame, [200, 20, 510], "download_json_btn", "Download JSON", () => {
     downloadMotionJson("motionJson.json"); // ✅ 이 함수는 전역에 있어야 함 (Sketch.js에 두는 걸 추천)
   });
