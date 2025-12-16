@@ -224,7 +224,6 @@ class Plutto {
         // 6) motionJson + plot 생성
         this.buildMotionJsonFromSvg();   // 아래 메서드 필요
     }
-
     buildMotionJsonFromSvg() {
         if (this.jsonBuilt) return;
         if (!this.svgPathPoints || this.svgPathPoints.length === 0) return;
@@ -353,6 +352,7 @@ class Plutto {
             console.error("plotEncode 오류:", err);
         }
     }
+    
 }
 // SVG 경로에서 포인트 추출 함수
 function extractPathPointsFromSvg(svgText, sampleStep = 0.02) {
