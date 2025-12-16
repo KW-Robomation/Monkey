@@ -6,7 +6,7 @@
 let init = false;
 // angles[0] = J1, angles[1] = J2
 let angles = [0, 0];
-// 모드 전환용 변수, false = SVG, true = Monkey FK 모드
+// 모드 전환용 변수, false = SVG, true = Plutto FK 모드
 
 // 슬라이더가 지정하는 목표 각도
 let targetAngles = [0, 0];
@@ -172,7 +172,7 @@ function dashboard() {
     penIsDown = !penIsDown;
 
     //  핵심: p5에서 쓰는 currentPen을 여기서 직접 바꿔준다
-    currentPen = penIsDown ? 1 : 0;
+    $('pen').d = penIsDown ? 1 : 0;
 
     // 버튼 텍스트 변경
     select("#pen_toggle_btn").text(penIsDown ? "Pen Up" : "Pen Down");
@@ -193,7 +193,7 @@ function dashboard() {
 
   select("#svg_draw_btn").on("click", () => {
     // 재생 시작
-    $("mode").d = 1;
+    drawMode = 1; // drawMode는 sketch에 정의되어 있는 변수입니다.
     startJsonPlayback();
     $("encoder.joint_1").d = currentAngleJoint1;
     $("encoder.joint_2").d = currentAngleJoint2;
@@ -205,23 +205,23 @@ function dashboard() {
 
   select("#draw_manual_btn").on("click", () => {
     // 재생 시작
-    $("mode").d = 0;
-    currentPen = 0;
+    drawMode = 0;
+    $('pen').d = 0;
 
     console.log("manual drawing mode activated");
   });
 
-  const drawDoubleBtm = frame.append("g");
-  createButton(drawDoubleBtm, [300, 50, 430], "svg_draw_double_btn", "SVG Draw Double");
+  const drawFastBtm = frame.append("g");
+  createButton(drawFastBtm, [300, 50, 430], "svg_draw_fast_btn", "SVG Draw Fast");
 
-  select("#svg_draw_double_btn").on("click", () => {
+  select("#svg_draw_fast_btn").on("click", () => {
     // 재생 시작
-    $("mode").d = 2;
-    currentPen = 0;
+    drawMode = 2;
+    $('pen').d = 0;
     startJsonPlayback();
     $("encoder.joint_1").d = currentAngleJoint1;
     $("encoder.joint_2").d = currentAngleJoint2;
-    console.log("SVG drawing Double mode activated");
+    console.log("SVG drawing Fast mode activated");
   });
 
   const drawAllBtm = frame.append("g");
@@ -229,17 +229,17 @@ function dashboard() {
 
   select("#svg_draw_all_btn").on("click", () => {
     // 재생 시작
-    $("mode").d = 3;
-    currentPen = 0;
+    drawMode = 3;
+    $('pen').d = 0;
     startJsonPlayback();
     bakeAllToTrailLayer(); 
     $("encoder.joint_1").d = currentAngleJoint1;
     $("encoder.joint_2").d = currentAngleJoint2;
-    console.log("SVG drawing Double mode activated");
+    console.log("SVG drawing All mode activated");
   });
 
-  createButton(frame, [200, 20, 510], "download_json_btn", "Download JSON", () => {
-    downloadMotionJson("motionJson.json"); // ✅ 이 함수는 전역에 있어야 함 (Sketch.js에 두는 걸 추천)
+  createButton(frame, [200, 20, 510], "download_txt_btn", "Download TXT", () => {
+    downloadPlotTxtDecSpace("motion_plot.txt"); // ✅ 이 함수는 전역에 있어야 함 (Sketch.js에 두는 걸 추천)
   });
 }
 // === 키보드 이벤트 처리 ===
@@ -342,6 +342,20 @@ function setupSvgDragDrop(popup_box_selection) {
   if (el.__svg_drop_ready__) return;
   el.__svg_drop_ready__ = true;
 
+  // ---- TXT plot 파서 ----
+  function parsePlotTxt(text) {
+    // "10 20 30 ..." 공백/줄바꿈 구분 허용
+    const arr = text
+      .trim()
+      .split(/\s+/)
+      .map(Number);
+
+    // 0~255 정수만 남기기
+    const bytes = arr.filter(n => Number.isInteger(n) && n >= 0 && n <= 255);
+
+    return bytes;
+  }
+
   // 드래그 오버 시 기본 동작 막고 강조
   el.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -351,7 +365,7 @@ function setupSvgDragDrop(popup_box_selection) {
   });
 
   // 드래그가 떠나면 강조 해제
-  el.addEventListener("dragleave", (e) => {
+  el.addEventListener("dragleave", () => {
     el.style.outline = "";
     el.style.outlineOffset = "";
   });
@@ -365,17 +379,24 @@ function setupSvgDragDrop(popup_box_selection) {
     const file = e.dataTransfer.files && e.dataTransfer.files[0];
     if (!file) return;
 
-    const isSvg =
-      (file.type === "image/svg+xml") ||
-      file.name.toLowerCase().endsWith(".svg");
+    const lower = (file.name || "").toLowerCase();
 
-    if (!isSvg) {
+    const isSvg =
+      file.type === "image/svg+xml" ||
+      lower.endsWith(".svg");
+
+    const isTxt =
+      file.type === "text/plain" ||
+      lower.endsWith(".txt");
+
+    // ✅ SVG/TXT 둘 다 허용
+    if (!isSvg && !isTxt) {
       lastSvgName = file.name || "(unknown)";
       lastSvgSize = file.size || 0;
-      lastSvgStatus = "Not an SVG ❌";
+      lastSvgStatus = "Unsupported ❌";
       const t = document.getElementById("svg_status_text");
-      if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
-      alert("SVG 파일만 드롭 가능!");
+      if (t) t.textContent = `FILE: ${lastSvgName} | ${lastSvgStatus}`;
+      alert("SVG 또는 TXT(plot) 파일만 드롭 가능!");
       return;
     }
 
@@ -385,43 +406,127 @@ function setupSvgDragDrop(popup_box_selection) {
     lastSvgStatus = "Loading...";
     {
       const t = document.getElementById("svg_status_text");
-      if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
+      if (t) t.textContent = `FILE: ${lastSvgName} | ${lastSvgStatus}`;
     }
 
     try {
-      const svgText = await file.text();     // ✅ SVG 원문 읽기
+      const text = await file.text();
       window.currentSvgName = file.name;
 
-      // 아주 간단한 유효성 체크(옵션)
-      const looksLikeSvg = (svgText && svgText.includes("<svg"));
-      if (!looksLikeSvg) {
-        lastSvgStatus = "Invalid SVG text ❌";
-        const t = document.getElementById("svg_status_text");
-        if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
-        alert("SVG 텍스트가 올바르지 않습니다.");
+      // =========================
+      // 1) SVG 처리
+      // =========================
+      if (isSvg) {
+        const looksLikeSvg = (text && text.includes("<svg"));
+        if (!looksLikeSvg) {
+          lastSvgStatus = "Invalid SVG text ❌";
+          const t = document.getElementById("svg_status_text");
+          if (t) t.textContent = `FILE: ${lastSvgName} | ${lastSvgStatus}`;
+          alert("SVG 텍스트가 올바르지 않습니다.");
+          return;
+        }
+
+        if (typeof window.rebuildFromSvgText === "function") {
+          window.rebuildFromSvgText(text);
+
+          const kb = (lastSvgSize / 1024).toFixed(1);
+          lastSvgStatus = `SVG Loaded ✅ (${kb} KB)`;
+          const t = document.getElementById("svg_status_text");
+          if (t) t.textContent = `FILE: ${lastSvgName} | ${lastSvgStatus}`;
+        } else {
+          lastSvgStatus = "rebuildFromSvgText() missing ❌";
+          const t = document.getElementById("svg_status_text");
+          if (t) t.textContent = `FILE: ${lastSvgName} | ${lastSvgStatus}`;
+          alert("rebuildFromSvgText()가 없습니다. Sketch.js에 전역 함수로 추가해줘.");
+        }
         return;
       }
 
-      if (typeof window.rebuildFromSvgText === "function") {
-        window.rebuildFromSvgText(svgText); // ✅ Sketch 파이프라인 호출
+      // =========================
+      // 2) TXT(plot) 처리
+      // =========================
+      if (isTxt) {
+        // plotDecode가 전역이어야 함
+        if (typeof window.plotDecode !== "function" && typeof plotDecode !== "function") {
+          lastSvgStatus = "plotDecode() missing ❌";
+          const t = document.getElementById("svg_status_text");
+          if (t) t.textContent = `FILE: ${lastSvgName} | ${lastSvgStatus}`;
+          alert("plotDecode()가 없습니다. plotDecode를 전역(window.plotDecode)으로 빼주세요.");
+          return;
+        }
 
-        // ✅ 성공 상태 표시
+        const bytes = parsePlotTxt(text);
+        if (bytes.length === 0) {
+          lastSvgStatus = "TXT empty/invalid ❌";
+          const t = document.getElementById("svg_status_text");
+          if (t) t.textContent = `FILE: ${lastSvgName} | ${lastSvgStatus}`;
+          alert("TXT에 유효한 0~255 숫자(byte)가 없습니다.");
+          return;
+        }
+
+        // 1) plutto.plot에 저장
+        plutto.plot = bytes;
+
+        // 2) decode 해서 motionJson 생성
+        const decoder = (typeof plotDecode === "function") ? plotDecode : window.plotDecode;
+        const motion = decoder(bytes);
+
+        plutto.motionJson = motion;
+
+        // 3) 재생 상태 초기화(있으면)
+        plutto.jsonBuilt = true;
+        if (typeof startJsonPlayback === "function") startJsonPlayback();
+
         const kb = (lastSvgSize / 1024).toFixed(1);
-        lastSvgStatus = `Loaded ✅ (${kb} KB)`;
+        lastSvgStatus = `TXT Plot Loaded ✅ (${kb} KB, ${bytes.length} bytes, ${motion.length} cmds)`;
         const t = document.getElementById("svg_status_text");
-        if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
-      } else {
-        lastSvgStatus = "rebuildFromSvgText() missing ❌";
-        const t = document.getElementById("svg_status_text");
-        if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
-        alert("rebuildFromSvgText()가 없습니다. Sketch.js에 전역 함수로 추가해줘.");
+        if (t) t.textContent = `FILE: ${lastSvgName} | ${lastSvgStatus}`;
+
+        return;
       }
     } catch (err) {
       console.error(err);
       lastSvgStatus = "Read failed ❌";
       const t = document.getElementById("svg_status_text");
-      if (t) t.textContent = `SVG: ${lastSvgName} | ${lastSvgStatus}`;
-      alert("SVG 읽기 실패");
+      if (t) t.textContent = `FILE: ${lastSvgName} | ${lastSvgStatus}`;
+      alert(`파일 읽기/처리 실패: ${err?.message || err}`);
     }
   });
 }
+// === 플롯 TXT 다운로드 함수 (10진수 공백 구분) ===
+function downloadPlotTxtDecSpace(filename = "motion_plot.txt") {
+  if (!plutto.plot || plutto.plot.length === 0) {
+    alert("plot 비어있음 (plotEncode 먼저 수행됐는지 확인)");
+    return;
+  }
+
+  const text = plutto.plot.join(" "); // ✅ 10진수 공백 구분
+
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+}
+// 드롭다운 시 svg 재빌드 함수
+window.rebuildFromSvgText = function (svgText) {
+  // UI쪽만 초기화
+  if (typeof trailLayer !== "undefined") trailLayer.clear();
+
+  // 엔진 처리: plutto에게 위임
+  if (plutto && typeof plutto.buildFromSvgText === "function") {
+    plutto.buildFromSvgText(svgText);
+  } else {
+    console.error("plutto.buildFromSvgText가 없습니다.");
+    return;
+  }
+
+  // 렌더링(재생)은 sketch에게
+  if (typeof startJsonPlayback === "function") startJsonPlayback();
+};
