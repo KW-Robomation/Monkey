@@ -18,7 +18,7 @@
 
 ### 2.1. 로봇 타입
 
-![alt text](../structure.png)
+![alt text](https://github.com/user-attachments/assets/7d4f019c-7e48-47ed-a484-2385316aa2e9)
 
 - 로봇 형태: **2-DOF Planar Drawing Robot Arm**
 - 구동 방식: 회전 관절 기반 (Rotational Joint)
