@@ -7,12 +7,6 @@ function sketch() {
   }, "p5-canvas");
 }
 
-function normalizeAngle(angle) {
-  // angle을 -180 ~ 180 범위로 정규화
-  while (angle > 180) angle -= 360;
-  while (angle < -180) angle += 360;
-  return angle;
-}
 
 // 그리기 모드
 let drawMode = 0;
@@ -31,7 +25,6 @@ let jsonIndex = 0;
 // 기존 전역 변수들
 // =======================
 const JOINT2_OFFSET = 143; // joint2가 0도일 때, 팔이 ㄷ자 모양이 되도록 오프셋 각도
-
 
 // 이미지 기준 기본 각도
 let upperRestAngle = 0; // upperarm 이미지 기울어진 각도
@@ -59,26 +52,12 @@ let maxJoint2 = -1e9;
 
 const scale = 0.7; // 전체 캔버스 스케일
 const moreHeight = 100;
-const imageScale = 0.5; // PNG 이미지 자체 스케일
 
 function J1_MIN() { return plutto.minJoint1; }
 function J1_MAX() { return plutto.maxJoint1; }
 function J2_MIN() { return plutto.minJoint2; }
 function J2_MAX() { return plutto.maxJoint2; }
 
-// 이미지 기준 팔 관절 픽셀 좌표 (길이 구하거나, 각도 측정시 필요)
-const TOP_JOINT_X = 220;
-const TOP_JOINT_Y = 547;
-
-const UPPER_JOINT_BASE_X = 747;
-const UPPER_JOINT_BASE_Y = 226;
-const UPPER_JOINT_ELBOW_X = 195;
-const UPPER_JOINT_ELBOW_Y = 383;
-
-const FORE_JOINT_ELBOW_X = 195;
-const FORE_JOINT_ELBOW_Y = 385;
-const FORE_PEN_X = 778;
-const FORE_PEN_Y = 612;
 
 // 재생 관련 상태
 let isPlaying = false;
@@ -391,21 +370,20 @@ function drawSimulator(p) {
 
   //    joint2: 새 기준(0이었던 곳이 140)이므로,
   //    물리각 = currentAngleJoint2 + 140
-  const physicalJ2 = currentAngleJoint2 + JOINT2_OFFSET;
+  const physicalJ2 = currentAngleJoint2 + plutto.JOINT2_OFFSET;
   const theta2 = p.radians(physicalJ2) * -1;
 
-  const theta1_fk = theta1 + upperRestAngle;
+  const theta1_fk = theta1 + plutto.upperRestAngle;
 
-  const x2 = baseX + link1Length * p.cos(theta1_fk);
-  const y2 = baseY + link1Length * p.sin(theta1_fk);
+  const x2 = plutto.baseX + plutto.link1 * p.cos(theta1_fk);
+  const y2 = plutto.baseY + plutto.link1 * p.sin(theta1_fk);
 
-  const x3 = x2 + link2Length * p.cos(theta1_fk + theta2);
-  const y3 = y2 + link2Length * p.sin(theta1_fk + theta2);
-
+  const x3 = x2 + plutto.link2 * p.cos(theta1_fk + theta2);
+  const y3 = y2 + plutto.link2 * p.sin(theta1_fk + theta2);
   // 3) Upperarm 렌더링
   if (imgUpper) {
     p.push();
-    p.translate(baseX, baseY);
+    p.translate(plutto.baseX, plutto.baseY);
     p.rotate(theta1); // upper는 joint1만 반영
     p.scale(imageScale);
     p.image(imgUpper, -UPPER_JOINT_BASE_X, -UPPER_JOINT_BASE_Y);
@@ -477,8 +455,8 @@ function drawSimulator(p) {
   p.text(`J2: ${currentAngleJoint2.toFixed(2)} deg`, 50, 70);
   p.text(`L1: ${link1Length.toFixed(0)}px`, 50, 90);
   p.text(`L2: ${link2Length.toFixed(0)}px`, 50, 110);
-  p.text(`Pen X: ${x3.toFixed(1)} px`, 50, 130);  // ★ 추가
-  p.text(`Pen Y: ${y3.toFixed(1)} px`, 50, 150); // ★ 추가
+  p.text(`Pen X: ${x3.toFixed(1)} px`, 50, 130);  
+  p.text(`Pen Y: ${y3.toFixed(1)} px`, 50, 150); 
 
   p.text(isPlaying ? "Playing" : "Paused", 50, 170);
   p.text(`Pen: ${$('pen').d}`, 50, 190);

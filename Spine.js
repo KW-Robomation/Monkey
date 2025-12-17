@@ -1,3 +1,18 @@
+// 로봇 팔 이미지 정보
+const TOP_JOINT_X = 220;
+const TOP_JOINT_Y = 547;
+
+const UPPER_JOINT_BASE_X = 747;
+const UPPER_JOINT_BASE_Y = 226;
+const UPPER_JOINT_ELBOW_X = 195;
+const UPPER_JOINT_ELBOW_Y = 383;
+
+const FORE_JOINT_ELBOW_X = 195;
+const FORE_JOINT_ELBOW_Y = 385;
+const FORE_PEN_X = 778;
+const FORE_PEN_Y = 612;
+const imageScale = 0.5;
+
 class Plutto {
     #minEncoderJoint1 = -30;
     #maxEncoderJoint1 = 180;
@@ -12,7 +27,7 @@ class Plutto {
     #link2 = 0;
     #upperRestAngle = 0;
     #foreRestAngle = 0;
-    #JOINT2_OFFSET = 0;
+    #JOINT2_OFFSET = 143;
     #jsonBuilt = false;
     #STEP_DEG = 0.010986328;
     #MAX_STEPS_PT = 7;
@@ -164,6 +179,7 @@ class Plutto {
         this.jsonBuilt = false;
         this.motionJson = [];
         this.plot = [];
+        this.initLinkGeometry();
     }
 
     fkPenXY_deg(j1Deg, j2Deg) {
@@ -346,8 +362,8 @@ class Plutto {
             return;
         }
 
-        let targetStartJ1 = Math.round(firstIk.joint1 / plutto.STEP_DEG);
-        let targetStartJ2 = Math.round(firstIk.joint2 / plutto.STEP_DEG);
+        let targetStartJ1 = Math.round(firstIk.joint1 / this.STEP_DEG);
+        let targetStartJ2 = Math.round(firstIk.joint2 / this.STEP_DEG);
         targetStartJ1 = Math.max(j1MinStep, Math.min(j1MaxStep, targetStartJ1));
         targetStartJ2 = Math.max(j2MinStep, Math.min(j2MaxStep, targetStartJ2));
 
@@ -384,8 +400,8 @@ class Plutto {
                 continue;
             }
 
-            let targetStepJ1 = Math.round(ik.joint1 / plutto.STEP_DEG);
-            let targetStepJ2 = Math.round(ik.joint2 / plutto.STEP_DEG);
+            let targetStepJ1 = Math.round(ik.joint1 / this.STEP_DEG);
+            let targetStepJ2 = Math.round(ik.joint2 / this.STEP_DEG);
 
             targetStepJ1 = Math.max(j1MinStep, Math.min(j1MaxStep, targetStepJ1));
             targetStepJ2 = Math.max(j2MinStep, Math.min(j2MaxStep, targetStepJ2));
@@ -410,7 +426,35 @@ class Plutto {
             console.error("plotEncode 오류:", err);
         }
     }
+    initLinkGeometry() {
+        // upperarm 길이 각도
+        {
+            const dx = (UPPER_JOINT_ELBOW_X - UPPER_JOINT_BASE_X) * imageScale;
+            const dy = (UPPER_JOINT_ELBOW_Y - UPPER_JOINT_BASE_Y) * imageScale;
+            this.#link1 = Math.hypot(dx, dy);
 
+            const dxImg = UPPER_JOINT_ELBOW_X - UPPER_JOINT_BASE_X;
+            const dyImg = UPPER_JOINT_ELBOW_Y - UPPER_JOINT_BASE_Y;
+            this.upperRestAngle = Math.atan2(dyImg, dxImg); // 이미지 상의 방향(rad)
+        }
+
+        // forearm 길이 각도
+        {
+            const dx = (FORE_PEN_X - FORE_JOINT_ELBOW_X) * imageScale;
+            const dy = (FORE_PEN_Y - FORE_JOINT_ELBOW_Y) * imageScale;
+            this.#link2 = Math.hypot(dx, dy);
+
+            const dxImg2 = FORE_PEN_X - FORE_JOINT_ELBOW_X;
+            const dyImg2 = FORE_PEN_Y - FORE_JOINT_ELBOW_Y;
+            this.foreRestAngle = Math.atan2(dyImg2, dxImg2); // 이미지 상의 방향(rad)
+        }
+    }
+}
+function normalizeAngle(angle) {
+  // angle을 -180 ~ 180 범위로 정규화
+  while (angle > 180) angle -= 360;
+  while (angle < -180) angle += 360;
+  return angle;
 }
 // SVG 경로에서 포인트 추출 함수
 function extractPathPointsFromSvg(svgText, sampleStep = 0.02) {
@@ -1136,6 +1180,14 @@ function plotDecode(byteArray) {
 // --------인스턴스-------------
 const plutto = new Plutto();
 
+plutto.configure({
+  baseX: 0,
+  baseY: 0,
+  JOINT2_OFFSET: 143,
+  STEP_DEG: plutto.STEP_DEG,
+  MAX_STEPS_PT: plutto.MAX_STEPS_PT,
+  SVG_BOX_SIZE: 250,
+});
 let wait, wait_forever;
 
 async function setup(spine) {
