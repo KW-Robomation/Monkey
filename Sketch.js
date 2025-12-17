@@ -27,12 +27,9 @@ let bakedOnce = false; // 한번에 그릴 것인지 여부
 //   pen: 0(업), 1(다운)
 let jsonIndex = 0;
 
-// 실제 로봇팔 스케일
-const SVG_BOX_SIZE = 250;
 // =======================
 // 기존 전역 변수들
 // =======================
-const MAX_DELTA_DEG = STEP_DEG * MAX_STEPS_PT; // 0.07도
 const JOINT2_OFFSET = 143; // joint2가 0도일 때, 팔이 ㄷ자 모양이 되도록 오프셋 각도
 
 
@@ -114,8 +111,8 @@ function playJsonStep() {
   const cmd = plutto.motionJson[jsonIndex];
 
   // d1, d2는 step 증분이니까 각도로 변환
-  const deltaDeg1 = cmd.d1 * STEP_DEG;
-  const deltaDeg2 = cmd.d2 * STEP_DEG;
+  const deltaDeg1 = cmd.d1 * plutto.STEP_DEG;
+  const deltaDeg2 = cmd.d2 * plutto.STEP_DEG;
 
   // 각도 적용
   currentAngleJoint1 += normalizeAngle(deltaDeg1);
@@ -141,8 +138,8 @@ function playJsonStepAndBake() {
   // 1) 한 스텝 진행 (기존 playJsonStep 내용)
   const cmd = plutto.motionJson[jsonIndex];
 
-  const deltaDeg1 = cmd.d1 * STEP_DEG;
-  const deltaDeg2 = cmd.d2 * STEP_DEG;
+  const deltaDeg1 = cmd.d1 * plutto.STEP_DEG;
+  const deltaDeg2 = cmd.d2 * plutto.STEP_DEG;
 
   currentAngleJoint1 += normalizeAngle(deltaDeg1);
   currentAngleJoint2 += normalizeAngle(deltaDeg2);
