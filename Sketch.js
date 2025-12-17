@@ -13,23 +13,6 @@ function normalizeAngle(angle) {
   while (angle < -180) angle += 360;
   return angle;
 }
-// 순방향 운동학 함수 (각도 → 펜 좌표)
-function fkPenXY_deg(j1Deg, j2Deg) {
-  const theta1 = (j1Deg * Math.PI / 180) * -1;
-
-  const physicalJ2 = j2Deg + JOINT2_OFFSET;
-  const theta2 = (physicalJ2 * Math.PI / 180) * -1;
-
-  const theta1_fk = theta1 + upperRestAngle;
-
-  const x2 = baseX + link1Length * Math.cos(theta1_fk);
-  const y2 = baseY + link1Length * Math.sin(theta1_fk);
-
-  const x3 = x2 + link2Length * Math.cos(theta1_fk + theta2);
-  const y3 = y2 + link2Length * Math.sin(theta1_fk + theta2);
-
-  return { x: x3, y: y3 };
-}
 
 // 그리기 모드
 let drawMode = 0;

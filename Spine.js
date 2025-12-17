@@ -1,6 +1,9 @@
 const STEP_DEG = 0.010986328;// 1스탭당 몇도인지(실제 스탭 각도 기준)
 const MAX_STEPS_PT = 7;
 
+// 실제 로봇팔 스케일
+const SVG_BOX_SIZE = 250;
+
 class Plutto {
     #minEncoderJoint1 = -30;
     #maxEncoderJoint1 = 180;
