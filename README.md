@@ -5,7 +5,12 @@
 
 ## Documentation
 
-- [Plutto Path 구조 및 처리 방식](docs/Plutto_Path.md)
+- [Plutto Path 구조 및 통신 방식](docs/Plutto_Path.md)
+- [Plutto 스펙(제원)](docs/HW_Specification.md)
+- [SVG Parsing 처리](docs/Parsing.md)
+- [Plutto 용어 문서](docs/Terminology.md)
+- [Plutto 대시보드 UI](docs/Dashboard.md)
+- [Plutto 전체 함수 설명](docs/Function.md)
 
 ## Repository Structure
 
