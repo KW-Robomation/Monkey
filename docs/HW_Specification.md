@@ -1,13 +1,10 @@
-# plotto Hardware Specification
+# Plotto Hardware Specification
 
 ## 1. 개요
 
-본 문서는 로봇팔 시스템 **plotto**의 하드웨어 구성과  
-소프트웨어 제어를 위해 정의된 **기구학적 기준 및 제원**을 설명합니다.
+본 문서는 로봇팔 시스템 **Plotto**의 하드웨어 구성과 소프트웨어 제어를 위해 정의된 **기구학적 기준 및 제원**을 설명합니다.
 
-해당 문서는 관절 구조, 좌표계 정의, 각도 원점, 가동 범위 등  
-소프트웨어에서 로봇 동작을 생성하고 해석하기 위해 필요한  
-**하드웨어 기준 정보**를 제공하는 것을 목적으로 합니다.
+해당 문서는 관절 구조, 좌표계 정의, 각도 원점, 가동 범위 등 소프트웨어에서 로봇 동작을 생성하고 해석하기 위해 필요한 **하드웨어 기준 정보**를 제공하는 것을 목적으로 합니다.
 
 ---
 
@@ -71,9 +68,9 @@
 
 펜 상태는 관절 동작과 독립적인 제어 명령으로 처리됩니다.
 
-plotto Path 포맷에서는 별도의 Control Byte로 표현됩니다.
+Plotto Path 포맷에서는 별도의 Control Byte로 표현됩니다.
 
-자세한 구조는 [plotto Path](plotto_Path.md) 문서를 참고합니다.
+자세한 구조는 [Plotto Path](https://github.com/KW-Robomation/Monkey/blob/main/docs/Plutto_Path.md) 문서를 참고합니다.
 
 ---
 
