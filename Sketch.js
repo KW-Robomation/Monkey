@@ -8,29 +8,18 @@ function sketch() {
 }
 
 
-// 그리기 모드
+// 그리기 모드 관련 변수
 let drawMode = 0;
-let bakedOnce = false; // 한번에 그릴 것인지 여부
-// =======================
-// 로봇 JSON 관련 전역
-// =======================
+let bakedOnce = false; 
 
-// 실제 로봇용 스텝 증분 JSON
-//   d1: joint1 step 증분
-//   d2: joint2 step 증분
-//   pen: 0(업), 1(다운)
 let jsonIndex = 0;
 
-// =======================
-// 기존 전역 변수들
-// =======================
+
 const JOINT2_OFFSET = 143; // joint2가 0도일 때, 팔이 ㄷ자 모양이 되도록 오프셋 각도
 
 // 이미지 기준 기본 각도
 let upperRestAngle = 0; // upperarm 이미지 기울어진 각도
 let foreRestAngle = 0; // forearm 이미지 기울어진 각도
-
-// SVG를 모션 기준으로 쓸지 여부 + 인덱스/속도
 
 // 로봇 관련 전역 변수
 let canvasWidth, canvasHeight;
@@ -44,7 +33,7 @@ let topPath, upperPath, forePath;
 let currentAngleJoint1 = 0; // 로봇 팔 joint1 각도
 let currentAngleJoint2 = 0; // 로봇 팔 joint2 각도
 
-// 관절 범위 (path로 인해 한번 이상 이동해야 정상적인 관절 범위 확인 가능)
+// 관절 범위 변수
 let minJoint1 = 1e9;
 let maxJoint1 = -1e9;
 let minJoint2 = 1e9;
@@ -63,7 +52,7 @@ function J2_MAX() { return plotto.maxJoint2; }
 let isPlaying = false;
 let debugFrame = 0;
 
-// 궤적을 '구워둘' 레이어 & 이전 펜 위치(화면 좌표 기준)
+// 궤적 그리기 관련 변수
 let trailLayer = null;
 let prevPenScreenX = null;
 let prevPenScreenY = null;
@@ -82,6 +71,70 @@ function openRobotPopup() {
   w2custompopup.open(option);
 }
 
+// 팔 길이, 각도 계산
+function initLinkGeometry() {
+  // upperarm 길이 각도
+  {
+    const dx = (UPPER_JOINT_ELBOW_X - UPPER_JOINT_BASE_X) * imageScale;
+    const dy = (UPPER_JOINT_ELBOW_Y - UPPER_JOINT_BASE_Y) * imageScale;
+    link1Length = Math.hypot(dx, dy);
+
+    const dxImg = UPPER_JOINT_ELBOW_X - UPPER_JOINT_BASE_X;
+    const dyImg = UPPER_JOINT_ELBOW_Y - UPPER_JOINT_BASE_Y;
+    upperRestAngle = Math.atan2(dyImg, dxImg); // 이미지 상의 방향(rad)
+  }
+
+  // forearm 길이 각도
+  {
+    const dx = (FORE_PEN_X - FORE_JOINT_ELBOW_X) * imageScale;
+    const dy = (FORE_PEN_Y - FORE_JOINT_ELBOW_Y) * imageScale;
+    link2Length = Math.hypot(dx, dy);
+
+    const dxImg2 = FORE_PEN_X - FORE_JOINT_ELBOW_X;
+    const dyImg2 = FORE_PEN_Y - FORE_JOINT_ELBOW_Y;
+    foreRestAngle = Math.atan2(dyImg2, dxImg2); // 이미지 상의 방향(rad)
+  }
+}
+
+// 그리기 베이스 위치 계산
+function initBasePosition() {
+  baseX = 800;
+
+  const topMargin = 80; // 화면 위에서 조금 내려온 위치
+
+  if (imgTop) {
+    const jointFromTop = TOP_JOINT_Y * imageScale;
+    // 이미지의 위쪽에서 관절까지 거리만큼 내려오기
+    baseY = topMargin + jointFromTop;
+  } else {
+    baseY = topMargin + 100;
+  }
+}
+
+// 그리기 초기화 함수
+function startJsonPlayback(jsonData) {
+  if (jsonData) {
+    plotto.motionJson = jsonData;
+  }
+  jsonIndex = 0;
+  isPlaying = false;
+  bakedOnce = false;
+
+  // 초기화: 홈에서 시작한다고 가정 (필요하면 홈 각도로 바꾸기)
+  currentAngleJoint1 = 0;
+  currentAngleJoint2 = 0;
+  $('pen').d = 0;
+
+  prevPenScreenX = null;
+  prevPenScreenY = null;
+  prevPenState = 0;
+
+  if (trailLayer) {
+    trailLayer.clear();
+  }
+}
+
+// 1 프레임 당 1번 그리는 함수
 function playJsonStep() {
   if (jsonIndex >= plotto.motionJson.length) {
     return;
@@ -97,9 +150,9 @@ function playJsonStep() {
   currentAngleJoint1 += normalizeAngle(deltaDeg1);
   currentAngleJoint2 += normalizeAngle(deltaDeg2);
 
-  // 관절 제한 클램프 (혹시라도 JSON이 범위 넘어가면 잘라줌)
-currentAngleJoint1 = Math.max(J1_MIN(), Math.min(J1_MAX(), currentAngleJoint1));
-currentAngleJoint2 = Math.max(J2_MIN(), Math.min(J2_MAX(), currentAngleJoint2));
+  // 관절 제한 클램프 (범위 넘어가면 자르기)
+  currentAngleJoint1 = Math.max(J1_MIN(), Math.min(J1_MAX(), currentAngleJoint1));
+  currentAngleJoint2 = Math.max(J2_MIN(), Math.min(J2_MAX(), currentAngleJoint2));
 
   // 펜 상태 반영
   $('pen').d = cmd.pen;
@@ -107,10 +160,12 @@ currentAngleJoint2 = Math.max(J2_MIN(), Math.min(J2_MAX(), currentAngleJoint2));
   // 엔코더 값도 같이 업데이트
   $("encoder.joint_1").d = degToStep(currentAngleJoint1);
   $("encoder.joint_2").d = degToStep(currentAngleJoint2);
-
+  
+  //각도 처리 후 index ++
   jsonIndex++;
 }
 
+// 가속 그리기 함수
 function playJsonStepAndBake() {
   if (jsonIndex >= plotto.motionJson.length) return false;
 
@@ -159,28 +214,6 @@ function playJsonStepAndBake() {
 
   return true;
 }
-
-function startJsonPlayback(jsonData) {
-  if (jsonData) {
-    plotto.motionJson = jsonData;
-  }
-  jsonIndex = 0;
-  isPlaying = false;
-  bakedOnce = false;
-
-  // 초기화: 홈에서 시작한다고 가정 (필요하면 홈 각도로 바꾸기)
-  currentAngleJoint1 = 0;
-  currentAngleJoint2 = 0;
-  $('pen').d = 0;
-
-  prevPenScreenX = null;
-  prevPenScreenY = null;
-  prevPenState = 0;
-
-  if (trailLayer) {
-    trailLayer.clear();
-  }
-}
 // 한번에 그리기 함수
 function bakeAllToTrailLayer() {
   if (bakedOnce) return;
@@ -221,7 +254,7 @@ function bakeAllToTrailLayer() {
   }
 
   isPlaying = false;
-  drawMode = 0; 
+  drawMode = 0;
   $('pen').d = 0;
   prevPenState = 0;
   prevPenScreenX = null;
@@ -272,47 +305,6 @@ function setupSimulator(p) {
   p.createCanvas(canvasWidth, canvasHeight);
 }
 
-// 팔 길이, 각도 계산
-function initLinkGeometry() {
-  // upperarm 길이 각도
-  {
-    const dx = (UPPER_JOINT_ELBOW_X - UPPER_JOINT_BASE_X) * imageScale;
-    const dy = (UPPER_JOINT_ELBOW_Y - UPPER_JOINT_BASE_Y) * imageScale;
-    link1Length = Math.hypot(dx, dy);
-
-    const dxImg = UPPER_JOINT_ELBOW_X - UPPER_JOINT_BASE_X;
-    const dyImg = UPPER_JOINT_ELBOW_Y - UPPER_JOINT_BASE_Y;
-    upperRestAngle = Math.atan2(dyImg, dxImg); // 이미지 상의 방향(rad)
-  }
-
-  // forearm 길이 각도
-  {
-    const dx = (FORE_PEN_X - FORE_JOINT_ELBOW_X) * imageScale;
-    const dy = (FORE_PEN_Y - FORE_JOINT_ELBOW_Y) * imageScale;
-    link2Length = Math.hypot(dx, dy);
-
-    const dxImg2 = FORE_PEN_X - FORE_JOINT_ELBOW_X;
-    const dyImg2 = FORE_PEN_Y - FORE_JOINT_ELBOW_Y;
-    foreRestAngle = Math.atan2(dyImg2, dxImg2); // 이미지 상의 방향(rad)
-  }
-}
-
-// 베이스 위치 계산
-function initBasePosition() {
-  baseX = 800;
-
-  const topMargin = 80; // 화면 위에서 조금 내려온 위치
-
-  if (imgTop) {
-    const jointFromTop = TOP_JOINT_Y * imageScale;
-    // 이미지의 위쪽에서 관절까지 거리만큼 내려오기
-    baseY = topMargin + jointFromTop;
-  } else {
-    baseY = topMargin + 100;
-  }
-}
-
-
 //p5 draw 함수
 function drawSimulator(p) {
   debugFrame++;
@@ -328,21 +320,14 @@ function drawSimulator(p) {
 
     currentAngleJoint1 = normalizeAngle(stepToDeg(step1));
     currentAngleJoint2 = normalizeAngle(stepToDeg(step2));
-  } else if (drawMode === 1) {
+  } else if (drawMode === 1 || drawMode === 2 || drawMode === 3) {
     // ---------- 자동 모드 ----------
     isPlaying = true;
-  } else if (drawMode === 2) {
-    // ---------- 빠르게 그리기 -------
-    isPlaying = true;
-  } else if (drawMode === 3) {
-    // ---------- 한번에 결과보기 -----
-    isPlaying = false;
   }
-
   // 배경
   p.background(245);
 
-  // 먼저, 이미 '구워둔' 궤적 레이어를 그대로 그린다 (scale 적용 X)
+  // trailLayer가 있으면 그대로 그림
   if (trailLayer) {
     p.image(trailLayer, 0, 0);
   }
@@ -352,16 +337,18 @@ function drawSimulator(p) {
 
   // 1) 모션 소스 선택 (JSON or SVG)
   if (plotto.motionJson.length > 0) {
-    if (drawMode === 3) {
-    }
-    else if (drawMode === 1) {
-        playJsonStep();
+    if (drawMode === 1) {
+      playJsonStep();
     }
     else if (drawMode === 2) {
-        const start = performance.now();
-  while (performance.now() - start < 0.1) {
-    if (!playJsonStepAndBake()) break;
-  }
+      const start = performance.now();
+      //1 프레임 안에서 playJsonStepAndBake()를 0.1ms당 한번 실행함
+      while (performance.now() - start < 0.1) {
+        if (!playJsonStepAndBake()) break;
+      }
+    }
+    else if(drawMode === 3){
+      bakeAllToTrailLayer();
     }
   }
 
@@ -453,13 +440,13 @@ function drawSimulator(p) {
   p.textSize(12);
   p.text(`J1: ${currentAngleJoint1.toFixed(2)} deg`, 50, 50);
   p.text(`J2: ${currentAngleJoint2.toFixed(2)} deg`, 50, 70);
-const encStep1 = $("encoder.joint_1").d;
-const encStep2 = $("encoder.joint_2").d;
+  const encStep1 = $("encoder.joint_1").d;
+  const encStep2 = $("encoder.joint_2").d;
 
-p.text(`ENC1: ${encStep1} step`, 50, 90);
-p.text(`ENC2: ${encStep2} step`, 50, 110);
-  p.text(`Pen X: ${x3.toFixed(1)} px`, 50, 130);  
-  p.text(`Pen Y: ${y3.toFixed(1)} px`, 50, 150); 
+  p.text(`ENC1: ${encStep1} step`, 50, 90);
+  p.text(`ENC2: ${encStep2} step`, 50, 110);
+  p.text(`Pen X: ${x3.toFixed(1)} px`, 50, 130);
+  p.text(`Pen Y: ${y3.toFixed(1)} px`, 50, 150);
 
   p.text(isPlaying ? "Playing" : "Paused", 50, 170);
   p.text(`Pen: ${$('pen').d}`, 50, 190);
