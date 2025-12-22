@@ -2,11 +2,11 @@
 
 ## 1. 개요
 
-본 문서는 로봇팔 시뮬레이터 프로젝트 **Plutto**에서 사용되는  
+본 문서는 로봇팔 시뮬레이터 프로젝트 **plotto**에서 사용되는  
 주요 용어 및 개념을 정리한 문서입니다.
 
 본 문서에 정의된 용어들은  
-Plutto 시스템의 소프트웨어 구조, 로봇 동작 생성 과정,  
+plotto 시스템의 소프트웨어 구조, 로봇 동작 생성 과정,  
 통신 포맷을 설명하는 전 문서 전반에서 **별도의 추가 설명 없이 사용**됩니다.
 
 ---
@@ -18,7 +18,7 @@ Plutto 시스템의 소프트웨어 구조, 로봇 동작 생성 과정,
 XML 기반의 벡터 이미지 포맷으로,  
 점, 선, 곡선 등의 기하학적 정보로 이미지를 표현합니다.
 
-Plutto 시스템에서는 SVG 파일을 입력으로 받아  
+plotto 시스템에서는 SVG 파일을 입력으로 받아  
 로봇 드로잉 경로를 생성합니다.
 
 ---
@@ -40,7 +40,7 @@ SVG 내에서 실제 형상을 정의하는 요소로,
 로봇의 관절 각도와 링크 구조를 기반으로,  
 로봇 말단(End Effector)의 위치와 자세를 계산하는 이론입니다.
 
-Plutto 시스템에서는 로봇 동작 생성의 핵심 계산 과정으로 사용됩니다.
+plotto 시스템에서는 로봇 동작 생성의 핵심 계산 과정으로 사용됩니다.
 
 ---
 
@@ -71,7 +71,7 @@ SVG 경로의 좌표를
 
 로봇 동작 계산 및 시각화를 위해 정의된 기준 좌표 체계입니다.
 
-Plutto 시스템 내부에서는  
+plotto 시스템 내부에서는  
 SVG 좌표계와 로봇 좌표계 간 변환을 수행하며,  
 모든 계산은 일관된 좌표계를 기준으로 수행됩니다.
 
@@ -114,21 +114,21 @@ SVG 좌표계와 로봇 좌표계 간 변환을 수행하며,
 로봇의 관절 각도 변화와 펜 상태로 구성된  
 연속적인 실행 단위의 데이터입니다.
 
-Plutto 시스템에서는 JSON 기반 구조 또는  
-Plutto Path 포맷으로 관리됩니다.
+plotto 시스템에서는 JSON 기반 구조 또는  
+plotto Path 포맷으로 관리됩니다.
 
 ---
 
-### 5.2. Plutto Path
+### 5.2. plotto Path
 
-Plutto 프로젝트에서 정의한  
+plotto 프로젝트에서 정의한  
 **1바이트 기반 로봇 동작 통신 포맷**입니다.
 
 관절 스텝 변화량과 펜 상태 제어를  
 고정 크기 데이터로 압축하여 표현합니다.
 
 자세한 구조는  
-[Plutto Path 문서](Plutto_Path.md)를 참고합니다.
+[plotto Path 문서](plotto_Path.md)를 참고합니다.
 
 ---
 
@@ -136,8 +136,8 @@ Plutto 프로젝트에서 정의한
 
 - SVG Parsing 처리: [Parsing](Parsing.md)
 - 하드웨어 기준 및 제원: [HW Specification](HW_Specification.md)
-- Plutto Path 구조 및 통신 방식: [Plutto Path](Plutto_Path.md)
-- Plutto 전체 함수 설명: [Function](Function.md)
+- plotto Path 구조 및 통신 방식: [plotto Path](plotto_Path.md)
+- plotto 전체 함수 설명: [Function](Function.md)
 
 본 문서는 위 문서들의  
 개념적 기반(reference) 역할을 수행합니다.
