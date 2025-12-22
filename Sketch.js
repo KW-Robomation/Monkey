@@ -124,7 +124,7 @@ function startJsonPlayback(jsonData) {
   currentAngleJoint1 = 0;
   currentAngleJoint2 = 0;
   $('pen').d = 0;
-
+  // 이전 프레임 정보 초기화
   prevPenScreenX = null;
   prevPenScreenY = null;
   prevPenState = 0;
@@ -169,7 +169,7 @@ function playJsonStep() {
 function playJsonStepAndBake() {
   if (jsonIndex >= plotto.motionJson.length) return false;
 
-  // 1) 한 스텝 진행 (기존 playJsonStep 내용)
+  // 한 스텝 진행 (기존 playJsonStep 내용)
   const cmd = plotto.motionJson[jsonIndex];
 
   const deltaDeg1 = cmd.d1 * plotto.STEP_DEG;
@@ -187,10 +187,10 @@ function playJsonStepAndBake() {
 
   jsonIndex++;
 
-  // 2) ✅ “이 스텝의 결과”를 trailLayer에 굽기
+  // “이 스텝의 결과”를 trailLayer에 적용하기
   if (!trailLayer) return true;
 
-  const pos = plotto.fkPenXY_deg(currentAngleJoint1, currentAngleJoint2); // 전역 fk 사용
+  const pos = plotto.fkPenXY_deg(currentAngleJoint1, currentAngleJoint2); // plotto fk 사용
   const penScreenX = pos.x * scale;
   const penScreenY = pos.y * scale;
 
@@ -219,7 +219,7 @@ function bakeAllToTrailLayer() {
   if (bakedOnce) return;
   bakedOnce = true;
 
-  // ✅ playback 상태만 수동 리셋
+  // 재생상태 초기
   jsonIndex = 0;
   currentAngleJoint1 = 0;
   currentAngleJoint2 = 0;
@@ -263,27 +263,24 @@ function bakeAllToTrailLayer() {
 
 // p5 setup 함수
 function setupSimulator(p) {
+  // 캔버스 크기 설정
   canvasWidth = 1200 * scale + 400;
   canvasHeight = 800 * scale + moreHeight;
 
   p.frameRate(100);
 
-  // Spine에서 이미지 경로 얻기 / 역방향 이미지
+  // Spine에서 이미지 리소스 / 경로 가져오기
   topPath = spine.images.get("top_reverse.png");
   upperPath = spine.images.get("upperarm_reverse.png");
   forePath = spine.images.get("forearm_reverse.png");
-
-  // p5 이미지 로딩
   imgTop = p.loadImage(topPath);
   imgUpper = p.loadImage(upperPath);
   imgFore = p.loadImage(forePath);
 
-  // 링크 길이 및 기본 각도 계산
+  // 링크 길이 및 기본 각도 계산 / 베이스 위치 계산
   initLinkGeometry();
-
-  // 베이스 위치 계산
   initBasePosition();
-
+  // plotto 초기 값 설정
   plotto.configure({
     baseX,
     baseY,
@@ -293,12 +290,9 @@ function setupSimulator(p) {
     foreRestAngle,
     JOINT2_OFFSET,
   });
-  // trailLayer 생성 (캔버스와 같은 크기, 투명 배경)
+  // 펜 궤적 레이어 설정
   trailLayer = p.createGraphics(canvasWidth, canvasHeight);
   trailLayer.clear();
-
-  // ✅ 여기서 SVG loadStrings(Spine 경로로 읽기) 제거
-  //    (드롭 이벤트에서 rebuildFromSvgText(svgText) 호출할 것)
 
   // 팝업, 캔버스 크기 조정
   w2custompopup.resize(canvasWidth + 16, canvasHeight + 96);
@@ -399,7 +393,7 @@ function drawSimulator(p) {
     p.pop();
   }
 
-  // 6) 펜 위치 & 궤적 trailLayer에 '굽기'
+  // 펜 위치 및 실시간 궤적 추가
   const penX = x3;
   const penY = y3;
 
@@ -426,7 +420,7 @@ function drawSimulator(p) {
     prevPenState = $('pen').d;
   }
 
-  // 7) 관절 범위 기록
+  // 관절 범위 기록
   if (debugFrame > 5) {
     minJoint1 = Math.min(minJoint1, currentAngleJoint1);
     maxJoint1 = Math.max(maxJoint1, currentAngleJoint1);
@@ -434,7 +428,7 @@ function drawSimulator(p) {
     maxJoint2 = Math.max(maxJoint2, currentAngleJoint2);
   }
 
-  // 8) 디버그 텍스트
+  // 디버그 텍스트 출력
   p.push();
   p.fill(0);
   p.textSize(12);
