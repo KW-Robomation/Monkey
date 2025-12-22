@@ -1,12 +1,16 @@
-# sktech에 대해
+# sketch에 대해
 
 sketch는 spine에서 해석된 svg 정보 **motionJson**을 바탕으로 화면 상에 그래픽으로 시뮬레이션합니다.  
 로봇팔은 두가지 회전 관절(joint 1, joint 2)을 가지고, 코드에서는 정기구학을 통해 주어진 관절 각도에서 펜 끝의 각도를 계산하고 대응하는 이미지를 회전/이동 시켜서 화면에 그립니다.  
-또한 펜 그리기 결과 궤적을 화면에 표시할 수 있으며, 수동 조작 모드(drawMode 1)과 자동 조작 모드(drawMode 2, 3, 4)를 지원합니다.
+또한 펜 그리기 결과 궤적을 화면에 표시할 수 있으며, 수동 조작 모드(drawMode 0)과 자동 조작 모드(drawMode 1, 2, 3)를 지원합니다.
 
 이 문서에서 sketch의 주요 변수, 함수, 동작 흐름을 설명하고자 합니다.
 
 ## 주요 변수
+
+<details>
+<summary><b>자세히 보기</b></summary>
+<div markdown="1">
 
 ### drawMode
 
@@ -45,7 +49,7 @@ playJsonStep 및 playJsonStepAndBake 함수가 이 값을 사용하며, 경로 �
 const JOINT2_OFFSET = 143;
 ```
 
-joint2 값이 기본 모양일 때(로봇팔이 ㄷ자 모양) joint2가 0도임을 보장하기 위해 정의한 offset 각도입니다.
+기본 모양일 때(로봇팔이 ㄷ자 모양) currentAngleJoint2가 0도임을 보장하기 위해 정의한 offset 각도입니다.
 
 ### foreRestAngle / upperRestAngle
 
@@ -54,7 +58,7 @@ let foreRestAngle = 0;
 let upperRestAngle = 0;
 ```
 
-forearm / uppperarm의 이미지 상 팔꿈치 관절과 펜 끝 각도 변수입니다. 회전 각도 계산에 활용됩니다.
+forearm / upperarm의 이미지 상 팔꿈치 관절과 펜 끝 각도 변수입니다. 회전 각도 계산에 활용됩니다.
 
 ### baseX, baseY
 
@@ -209,6 +213,9 @@ plotto.motionJson;
 spine에서 해석한 svg 바탕 로봇 동작을 저장하는 변수입니다.
 motionJson에서 정의한 동작 명령을 바탕으로 sketch에서 시뮬레이션 합니다.
 
+</div>
+</details>
+
 ## 주요 함수
 
 ### sketch() / openRobotPopup()
@@ -277,7 +284,7 @@ initLinkGeometry() 함수는 로봇 팔 링크의 기하 정보(길이와 기준
 ### initBasePosition()
 
 ```javascript
-// 그리기 베이스 위치 계
+// 그리기 베이스 위치 계산
 function initBasePosition() {
   baseX = 800;
 
@@ -884,4 +891,4 @@ p5가 설정한 100fps를 목표로 drawSimulator를 계속 호출하면서 시�
 
 ## 결론
 
-sktech 부분은 spine에서 정의된 motionJson 정보를 바탕으로 로봇팔을 렌더링을 진행합니다.
+sketch는 spine이 생성한 motionJson을 실행해 currentAngleJoint*/pen 상태를 갱신하고, 그 상태를 기반으로 FK와 이미지 변환을 적용해 로봇과 궤적을 렌더링하는 시뮬레이터 입니다.
