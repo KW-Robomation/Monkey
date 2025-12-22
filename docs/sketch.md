@@ -15,7 +15,7 @@ let drawMode = 0;
 ```
 
 로봇 시뮬레이터 동작 모드를 나타내는 변수입니다.  
-0일때 수동 모드를 나타내며, dashBoard를 통해 로봇 팔을 움직일 수 있습니다.
+0일때 수동 모드를 나타내며, dashboard를 통해 로봇 팔을 움직일 수 있습니다.
 1일때 기본 재생 모드를 나타내며, plotto.motionJson에 저장된 동작 시퀀스를 한 프레임당 한번 실행합니다.
 2일때 가속 재생 모드를 나타내며, 프레임 하나에 가능한 많은 스텝을 처리합니다.
 3일때 결과 모드를 나타내며, 한번에 그리기 결과를 볼 수 있습니다.
@@ -81,7 +81,7 @@ let imgTop, imgUpper, imgFore;
 
 로봇팔의 각 부분에 해당되는 p5 이미지 객체입니다.
 spine.images.get() 호출을 통해 topPath, upperPath, forePath에 이미지 경로를 얻어, 그 이미지 경로를 활용해 p5 이미지를 로딩하여 각각 imgTop, imgUpper, imgFore에 저장합니다.
-이후 p.image(imgTop)와 같은 형태로 이미지를 랜더링 할 수 있습니다.
+이후 p.image(imgTop)와 같은 형태로 이미지를 렌더링 할 수 있습니다.
 
 ### currentAngleJoint1, currentAngleJoint2
 
@@ -158,7 +158,7 @@ let trailLayer = null;
 펜 궤적을 그리는 별도 그래픽 레이어입니다.
 p.createGraphics(canvasWidth, canvasHeight)로 메인 캔버스와 동일 크기의 오프스크린 버퍼를 생성하여 사용합니다.
 이 레이어에 펜이 이동한 자취를 축적해서 그려두고, 메인 화면에 overlay하는 방식으로 사용합니다.
-별도 레이어를 두는 이유는, 로봇팔 랜더링 시 기존 로봇팔 이미지를 지워야 하는데, 매 프레임 배경을 지우더라도 기존 궤적을 보존하여 지속적으로 표시하기 위함입니다.
+별도 레이어를 두는 이유는, 로봇팔 렌더링 시 기존 로봇팔 이미지를 지워야 하는데, 매 프레임 배경을 지우더라도 기존 궤적을 보존하여 지속적으로 표시하기 위함입니다.
 
 ### prevPenScreenX, prevPenScreenY
 
@@ -194,8 +194,8 @@ $("pen").d = 0;
 #### $("encoder.joint_1").d, ("encoder.joint_2").d
 
 ```javascript
-"encoder.joint_1".d;
-"encoder.joint_2".d;
+$("encoder.joint_1").d;
+$("encoder.joint_2").d;
 ```
 
 각각 currentAngleJoint1, currentAngleJoint2에 저장된 값을 STEP(0.001...)단위로 정수로 변환하여 저장합니다.
@@ -329,10 +329,10 @@ startJsonPlayback(jsonData) 함수는 새로운 그림 그리기나 모션 재�
 
 #### 실행 동작
 
-로봇팔 자세 초기화 : currentAngleJoint1, currentAngleJoint2를 0으로 되돌립니다. 이는 현 로봇팔 joint 0,0이 아닐 시 제한 각도를 넘을 수 있기 때문입니다.
+**로봇팔 자세 초기화** : currentAngleJoint1, currentAngleJoint2를 0으로 되돌립니다. 이는 현 로봇팔 joint 0,0이 아닐 시 제한 각도를 넘을 수 있기 때문입니다.
 펜 상태 초기화 : $('pen').d = 0으로 펜을 올린 상태로 만듭니다.
-이전 프레임 정보 초기화 : prevPenScreenX, prevPenScreenY, prevPenState 모두 초기화(null 또는 0). 펜 궤적 그리기용 이전 기록들을 지워주는 것입니다.
-궤적 레이어 초기화 : trailLayer.clear()를 호출하여, 이전에 그려진 모든 펜 궤적를 지웁니다.
+**이전 프레임 정보 초기화** : prevPenScreenX, prevPenScreenY, prevPenState 모두 초기화(null 또는 0). 펜 궤적 그리기용 이전 기록들을 지워주는 것입니다.
+**궤적 레이어 초기화** : trailLayer.clear()를 호출하여, 이전에 그려진 모든 펜 궤적를 지웁니다.
 
 ### playJsonStep()
 
@@ -450,13 +450,13 @@ playJsonStepAndBake() 함수는 playJsonStep()과 유사하게 한 스텝의 명
 
 #### 실행 동작
 
-1 스텝 각도 적용하기 : jsonIndex 경계 검사, cmd 가져오기, 각도 증분 계산 및 적용, 클램핑, 펜 상태/엔코더 업데이트 등을 진행합니다. 이는 playJsonStep()와 동일합니다.
+**1 스텝 각도 적용하기** : jsonIndex 경계 검사, cmd 가져오기, 각도 증분 계산 및 적용, 클램핑, 펜 상태/엔코더 업데이트 등을 진행합니다. 이는 playJsonStep()와 동일합니다.
 이후 const pos = plotto.fkPenXY_deg(currentAngleJoint1, currentAngleJoint2) 에서 현재 (한 스텝 진행 후의) 펜 끝 좌표를 정밀 계산합니다.
 계산한 pos를 바탕으로 const penScreenX = pos.x _ scale; const penScreenY = pos.y _ scale; : 스케일을 곱하여 화면 픽셀 좌표계의 펜 위치를 구합니다.
-궤적 그리기 : 펜 위치를 구한 뒤, penState에 따라서 그릴지 말지를 결정하고, prevPenScreenX/Y, prevPenState를 갱신합니다.
+**궤적 그리기** : 펜 위치를 구한 뒤, penState에 따라서 그릴지 말지를 결정하고, prevPenScreenX/Y, prevPenState를 갱신합니다.
 마지막으로 return true;를 반환하는데, 이 함수의 호출부에서는 반환값을 체크하여 false면 루프를 멈추고, true면 계속 반복합니다. 즉, 더 그릴 명령이 남아있는 한 true를 반환하고, index가 끝까지 가면 처음 부분에서 return false 되어 루프가 종료됩니다.
 
-playJsonStepAndBake()는 한 스텝의 시뮬레이션 + 해당 선분 즉시 그리기를 수행합니다. 이 때, 로봇팔 이미지의 랜더링은 drawMode 1과 같이 프레임 당 한번 진행되고, 그리기 궤적만 빠르게 진행되어 사용자가 그리기가 빠르게 진행되는 것처럼 느끼게 됩니다.
+playJsonStepAndBake()는 한 스텝의 시뮬레이션 + 해당 선분 즉시 그리기를 수행합니다. 이 때, 로봇팔 이미지의 렌더링은 drawMode 1과 같이 프레임 당 한번 진행되고, 그리기 궤적만 빠르게 진행되어 사용자가 그리기가 빠르게 진행되는 것처럼 느끼게 됩니다.
 
 ### bakeAllToTrailLayer()
 
@@ -516,10 +516,10 @@ bakeAllToTrailLayer() 함수는 현재 plotto.motionJson에 담긴 전체 경로
 
 #### 실행 동작
 
-재생상태 초기화 : jsonIndex, currentAngleJoint1, currentAngleJoint2, $('pen').d 등 변수를 초기화하고, trailLayer도 초기화합니다.
-반복문 순회 : while (jsonIndex < plotto.motionJson.length)을 통해 motionJson의 모든 명령을 처리합니다.
+**재생상태 초기화** : jsonIndex, currentAngleJoint1, currentAngleJoint2, $('pen').d 등 변수를 초기화하고, trailLayer도 초기화합니다.
+**반복문 순회** : while (jsonIndex < plotto.motionJson.length)을 통해 motionJson의 모든 명령을 처리합니다.
 playJsonStep을 통해 한스텝의 각도값 / 펜 상태를 갱신하고, 이 정보를 trailLayer에 누적합니다. 이를 motionJson의 끝까지 진행합니다.
-수동모드 설정 : 루프가 끝나면, isPlaying을 false로 설정하고, 모드를 0으로 초기화 하며, 펜 정보도 초기화합니다.
+**수동모드 설정** : 루프가 끝나면, isPlaying을 false로 설정하고, 모드를 0으로 초기화 하며, 펜 정보도 초기화합니다.
 
 함수 실행이 끝나면 trailLayer에는 주어진 motionJson 전체 경로가 한 번에 그려져 있게 됩니다. 그리고 drawMode를 0으로 돌려놓았으므로, 이후 drawSimulator에서 자동 재생 루틴이 돌지 않고, 로봇은 멈춘 상태(마지막 위치)로 유지됩니다.
 
@@ -568,16 +568,16 @@ setupSimulator(p) 함수는 p5.js가 요구하는 setup 함수로, 시뮬레이�
 
 #### 실행 동작
 
-캔버스 크기 설정 : canvasWidth, canvasHeight를 통해 캔버스 크기를 결정합니다. 또한 p.frameRate(100)을 통해 p5의 프레임레이트를 100으로 설정합니다.
+**캔버스 크기 설정** : canvasWidth, canvasHeight를 통해 캔버스 크기를 결정합니다. 또한 p.frameRate(100)을 통해 p5의 프레임레이트를 100으로 설정합니다.
 이미지 리소스 : spine.images.get()을 통해 이미지의 실제 경로를 얻고, p.loadImage()를 호출하여 경로의 이미지를 로드합니다.
 
-초기 값 설정 : initLinkGeometry(), initBasePosition() 함수 호출을 통해 baseX,baseY와 링크 길이와 각도(link1Length, link2Length, upperRestAngle, foreRestAngle)를 계산합니다. 이후 계산한 값을 plotto.configure({ ... })을 통해 plotto 객체에 전달합니다.
+**초기 값 설정** : initLinkGeometry(), initBasePosition() 함수 호출을 통해 baseX,baseY와 링크 길이와 각도(link1Length, link2Length, upperRestAngle, foreRestAngle)를 계산합니다. 이후 계산한 값을 plotto.configure({ ... })을 통해 plotto 객체에 전달합니다.
 
-펜 궤적 레이어 설정 : • trailLayer = p.createGraphics(canvasWidth, canvasHeight)를 통해 p5의 레이어를 생성합니다. 이후 trailLayer.clear()를 통해 방금 생성한 그래픽에 투명 배경을 지정합니다.(이후 여기에 선을 그릴 때 배경이 투명하므로, 메인 화면에 겹쳐 그려도 선 이외에 다른 것은 보이지 않습니다.)
+**펜 궤적 레이어 설정** : • trailLayer = p.createGraphics(canvasWidth, canvasHeight)를 통해 p5의 레이어를 생성합니다. 이후 trailLayer.clear()를 통해 방금 생성한 그래픽에 투명 배경을 지정합니다.(이후 여기에 선을 그릴 때 배경이 투명하므로, 메인 화면에 겹쳐 그려도 선 이외에 다른 것은 보이지 않습니다.)
 
-팝업 크기 조정 및 캔버스 생성 : w2custompopup.resize(canvasWidth + 16, canvasHeight + 96)를 통해 팝업창의 크기를 캔버스 크기에 맞게 재조정하며(16, 96과 같은 수는 여유 offset 입니다.), • p.createCanvas(canvasWidth, canvasHeight)를 통해 실제 p5 캔버스를 생성합니다.
+**팝업 크기 조정 및 캔버스 생성** : w2custompopup.resize(canvasWidth + 16, canvasHeight + 96)를 통해 팝업창의 크기를 캔버스 크기에 맞게 재조정하며(16, 96과 같은 수는 여유 offset 입니다.), • p.createCanvas(canvasWidth, canvasHeight)를 통해 실제 p5 캔버스를 생성합니다.
 
-setupSimulator()는 시뮬레이터가 동작하기 위한 모든 초기 준비 작업을 수행합니다: 화면 구성, 리소스 로드, 기하계산, 전역상태 세팅, UI 동기화 등을 마치고, 마지막에 캔버스를 만들어놨으므로, 이후 자동으로 p5가 drawSimulator 함수를 매 프레임 호출하게 됩니다.
+setupSimulator()는 시뮬레이터가 동작하기 위한 모든 초기 준비 작업을 수행합니다. 화면 구성, 리소스 로드, 기하계산, 전역상태 세팅, UI 동기화 등을 마치고, 마지막에 캔버스를 만들어놨으므로, 이후 자동으로 p5가 drawSimulator 함수를 매 프레임 호출하게 됩니다.
 
 ### drawSimulator(p)
 
@@ -735,8 +735,8 @@ drawSimulator(p) 함수는 p5.js의 draw 루프 함수로, 화면을 지속적�
 
 #### 실행 동작
 
-디버그 프레임 증가: 프레임마다 debugFrame 변수를 1 씩 증가시킵니다.
-모드에 따른 상태 설정 : drawMode에 따라 모드를 설정합니다.  
+**디버그 프레임 증가** : 프레임마다 debugFrame 변수를 1 씩 증가시킵니다.
+**모드에 따른 상태 설정** : drawMode에 따라 모드를 설정합니다.  
 drawMode가 1일 경우(수동 모드)
 
 ```javascript
@@ -756,7 +756,7 @@ isPlaying = true;
 
 isPlaying 변수를 true로 변경하여 자동모드 변수를 변경합니다.
 
-화면 초기화 : p.background(245)로 캔버스 전체를 밝은 회색 배경으로 체웁니다(이 때, 이전 프레임에 그린 로봇, 텍스트가 지워집니다.)
+**화면 초기화** : p.background(245)로 캔버스 전체를 밝은 회색 배경으로 체웁니다(이 때, 이전 프레임에 그린 로봇, 텍스트가 지워집니다.)
 
 ```javascript
 if (trailLayer) {
@@ -766,7 +766,7 @@ if (trailLayer) {
 
 trailLayer가 존재하면, 그것을 현재 프레임에 그립니다.(trailLayer에는 그동안 펜으로 그린 궤적이 저장되어 있으므로, 이전에 그린 빨간 선 경로가 캔버스에 유지됩니다.)
 
-스케일 적용 :
+**스케일 적용** :
 
 ```javascript
 p.scale(scale);
@@ -774,7 +774,7 @@ p.scale(scale);
 
 이후의 그리기 연산은 미리 정한 scale을 적용합니다.
 
-자동 모 명령 처리(수동은 제외) :
+**자동 명령 처리(수동은 제외)** :
 
 ```javascript
  	if (plotto.motionJson.length > 0) {
@@ -786,14 +786,14 @@ p.scale(scale);
 
 drawMode 1일 경우, playJsonStep()을 호출하여 한 스텝만 처리합니다.
 drawMode 2일 경우, performance.now() 함수를 사용하여, 0.1밀리초(빠른 속도) 단위로 playJsonStepAndBake() 함수를 실행합니다. 이렇게 해서 한 프레임 내에 많은 스텝을 처리하여 빠른 그리기를 구현하였습니다.
-이 때에는 그리기는 한 프레임에 여러번 실행되고 로봇팔 이미지 랜더링은 한 프레임에 한번 실행되어, 실제적으로는 빠르게 그려지는 것으로 보이게 됩니다.
+이 때에는 그리기는 한 프레임에 여러번 실행되고 로봇팔 이미지 렌더링은 한 프레임에 한번 실행되어, 실제적으로는 빠르게 그려지는 것으로 보이게 됩니다.
 drawMode 3일 경우, bakeAllToTrailLayer() 함수를 사용하여, motionJson를 while문을 통해 한번에 탐색하여 한번에 trailLayer에 그리기를 수행합니다.
 
-관절 위치 계산 :
+**관절 위치 계산** :
 모드를 통해 정해진 currentAngleJoint1 / 2에 맞는 로봇 관절의 위치와 펜 위치를 계산합니다.
 
 
-![](https://github.com/user-attachments/assets/6f07cd66-6c46-41ae-94f7-7c2fdaa36e0b)
+![](https://github.com/user-attachments/assets/2935e8ba-e0ed-43f8-bd0b-fc826958382d)
 그림은 currentAngle1 / 2 가 0일때를 가정한 예시입니다.
 joint2가 있는 좌표 x2,y2를 구하기 위해, 각도는 theta1 + upperRestAngle(노란 부채꼴 각도)이 필요합니다.
 theta1는 p.radians(currentAngleJoint1) * -1 값으로, 사용자 입력 각도(로봇 기준) 와 화면 좌표계(p5.js, 반시계가 +) 간의 방향 차이를 보정하기 위함입니다.두 값을 더한 만큼의 각도를 이용하여 정기구학을 사용해 x2,y2 좌표를 계산합니다.
@@ -802,18 +802,18 @@ pen이 있는 좌표 x3,y3를 구하기 위해 각도는 theta1 + upperRestAngle
 이 때, JOINT2_OFFSET은 현재 이미지 기준으로 143도 정도로, 로봇 팔이 ㄷ자모양일 때, currentAngleJoint2가 0임을 보장하기 위한 OFFSET입니다.
 x2,y2를 구할때 사용한 각도 theta1 + upperRestAngle(노란 부채꼴 각도)에 반대방향(-)으로 (currentAngleJoint2 + JOINT2_OFFSET(파란 부채꼴 각도))만큼 뺀 각도를 사용하여 계산합니다
 
-이미지 랜더링 :
+**이미지 렌더링** :
 
-![](https://github.com/user-attachments/assets/b55df16c-67d2-48dd-b4ff-7c7a72b6d975)
+![](https://github.com/user-attachments/assets/fa0ff823-0654-4730-b21b-0e54b57b1845)
 그림은 currentAngle1 / 2 가 0일때를 가정한 예시입니다.
-이미지 랜더링은 관절위치 계산과 유사하지만, p.rotate가 이미지가 아닌 좌표계를 회전시킨다는 것과, 이미지 자체가 이미 회전된 상태(rest angle) 임을 고려해야 합니다.
-우선, upperArm 이미지는 currentJointAngle = 0 일때, x축으로 평행함으로, p.rotate( - currentJointAngle)를 사용하여 랜더링 합니다.
-이후, foreArm 이미지 랜더링 각도는 x3,y3을 구할 때의 각도와 비슷하지만, p.rotate()는 이미지를 회전하는 것이 아닌, 좌표계를 회전하는 방식이다 보니, 이미지 자체의 회전된 각도(foreRestAngle)만큼 각도 차이가 나게 됩니다.
+이미지 렌더링은 관절위치 계산과 유사하지만, p.rotate가 이미지가 아닌 좌표계를 회전시킨다는 것과, 이미지 자체가 이미 회전된 상태(rest angle) 임을 고려해야 합니다.
+우선, upperArm 이미지는 currentJointAngle = 0 일때, x축으로 평행함으로, p.rotate( - currentJointAngle)를 사용하여 렌더링 합니다.
+이후, foreArm 이미지 렌더링 각도는 x3,y3을 구할 때의 각도와 비슷하지만, p.rotate()는 이미지를 회전하는 것이 아닌, 좌표계를 회전하는 방식이다 보니, 이미지 자체의 회전된 각도(foreRestAngle)만큼 각도 차이가 나게 됩니다.
 이 각도 만큼 빼 주어(-foreRestAngle이므로 반시계방향) 이미지의 회전 각도 만큼을 더 회전하여 x3,y3와 이미지의 pen 위치와 맞게 합니다.
-펜 위치 및 실시간 궤적 추가 :
+**펜 위치 및 실시간 궤적 추가** :
 penX, penY에 x3, y3의 펜 끝 좌표를 저장하여, scale 만큼을 곱한 penScreenX, penScreenY를 계산하고, prevPenState와 $('pen').d를 통해 궤적을 추가합니다. 이 궤적 추가는 수동 모드와, 자동모드 (drawMode === 1)에서 그리기를 보장하기 위함입니다.
 
-관절 범위 기록 :
+**관절 범위 기록** :
 
 ```javascript
 if (debugFrame > 5) {
@@ -825,7 +825,7 @@ if (debugFrame > 5) {
 ```
 
 debugFrame 5 이상일 시, currentAngleJoint 값에서 기록된 관절 범위를 기록합니다.
-디버그 텍스트 출력 :
+**디버그 텍스트 출력** :
 
 ```javascript
 p.push();
@@ -872,16 +872,16 @@ p5가 설정한 100fps를 목표로 drawSimulator를 계속 호출하면서 시�
 
 자동모드 동작 실행 : 만약 자동모드 일 경우, drawMode 값에 따라 한 스텝씩 또는 여러 스텝을 빠르게 처리합니다. 이 과정에서 currentAngleJoint와 펜 상태 등이 갱신되고, (고속모드의 경우 동시에 선도 그려짐) jsonIndex가 진행됩니다.
 
-**_ drawMode 1 일시 _** : drawSimulator가 매 프레임 playJsonStep()을 호출하여 한 스텝씩 진행하며 currentAngleJoint가 갱신됩니다.
-**_ drawMode 2 일시 _** : drawSimulator가 한번 호출 될 때, 여러 스탭을 소비하며 궤적을 그립니다.
-**_ drawMode 3 일시 _** : 내부에서 루프를 돌며(while) drawSimulator의 개입 없이, 즉시 trailLayer에 그림을 완성합니다.
+**drawMode 1 일시** : drawSimulator가 매 프레임 playJsonStep()을 호출하여 한 스텝씩 진행하며 currentAngleJoint가 갱신됩니다.
+**drawMode 2 일시** : drawSimulator가 한번 호출 될 때, 여러 스탭을 소비하며 궤적을 그립니다.
+**drawMode 3 일시** : 내부에서 루프를 돌며(while) drawSimulator의 개입 없이, 즉시 trailLayer에 그림을 완성합니다.
 
-로봇팔 이미지 랜더링 : 계산된 각도와 좌표를 이용해, 상부팔, 하부팔, 베이스 이미지를 적절한 위치와 회전으로 그립니다.
+**로봇팔 이미지 렌더링** : 계산된 각도와 좌표를 이용해, 상부팔, 하부팔, 베이스 이미지를 적절한 위치와 회전으로 그립니다.
 
-펜 궤적 그리기 : 펜 끝 좌표를 이용하여, 펜이 내려져 있다고 판단 시(prevPenState, $('pen').d의 변수에 따름) trailLayer에 추가로 선을 그립니다.
+**펜 궤적 그리기** : 펜 끝 좌표를 이용하여, 펜이 내려져 있다고 판단 시(prevPenState, $('pen').d의 변수에 따름) trailLayer에 추가로 선을 그립니다.
 
-디버그 정보 업데이트 : 관절 각도의 min/max, 상태 텍스트 등 여러 텍스트를 출력합니다.
+**디버그 정보 업데이트** : 관절 각도의 min/max, 상태 텍스트 등 여러 텍스트를 출력합니다.
 
 ## 결론
 
-sktech 부분은 spine에서 정의된 motionJson 정보를 바탕으로 로봇팔을 랜더링을 진행합니다.
+sktech 부분은 spine에서 정의된 motionJson 정보를 바탕으로 로봇팔을 렌더링을 진행합니다.
