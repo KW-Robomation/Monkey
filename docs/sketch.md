@@ -789,12 +789,27 @@ drawMode 2일 경우, performance.now() 함수를 사용하여, 0.1밀리초(빠
 이 때에는 그리기는 한 프레임에 여러번 실행되고 로봇팔 이미지 랜더링은 한 프레임에 한번 실행되어, 실제적으로는 빠르게 그려지는 것으로 보이게 됩니다.
 drawMode 3일 경우, bakeAllToTrailLayer() 함수를 사용하여, motionJson를 while문을 통해 한번에 탐색하여 한번에 trailLayer에 그리기를 수행합니다.
 
-정기구학 계산 : 모드를 통해 정해진 currentAngleJoint1 / 2에 맞는 로봇 관절의 위치와 펜 위치를 계산합니다.
-
 관절 위치 계산 :
+모드를 통해 정해진 currentAngleJoint1 / 2에 맞는 로봇 관절의 위치와 펜 위치를 계산합니다.
+
+
+![](https://github.com/user-attachments/assets/6f07cd66-6c46-41ae-94f7-7c2fdaa36e0b)
+그림은 currentAngle1 / 2 가 0일때를 가정한 예시입니다.
+joint2가 있는 좌표 x2,y2를 구하기 위해, 각도는 theta1 + upperRestAngle(노란 부채꼴 각도)이 필요합니다.
+theta1는 p.radians(currentAngleJoint1) * -1 값으로, 사용자 입력 각도(로봇 기준) 와 화면 좌표계(p5.js, 반시계가 +) 간의 방향 차이를 보정하기 위함입니다.두 값을 더한 만큼의 각도를 이용하여 정기구학을 사용해 x2,y2 좌표를 계산합니다.
+
+pen이 있는 좌표 x3,y3를 구하기 위해 각도는 theta1 + upperRestAngle(노란 부채꼴 각도) - (currentAngleJoint2 + JOINT2_OFFSET(파란 부채꼴 각도))가 필요합니다.
+이 때, JOINT2_OFFSET은 현재 이미지 기준으로 143도 정도로, 로봇 팔이 ㄷ자모양일 때, currentAngleJoint2가 0임을 보장하기 위한 OFFSET입니다.
+x2,y2를 구할때 사용한 각도 theta1 + upperRestAngle(노란 부채꼴 각도)에 반대방향(-)으로 (currentAngleJoint2 + JOINT2_OFFSET(파란 부채꼴 각도))만큼 뺀 각도를 사용하여 계산합니다
 
 이미지 랜더링 :
 
+![](https://github.com/user-attachments/assets/b55df16c-67d2-48dd-b4ff-7c7a72b6d975)
+그림은 currentAngle1 / 2 가 0일때를 가정한 예시입니다.
+이미지 랜더링은 관절위치 계산과 유사하지만, p.rotate가 이미지가 아닌 좌표계를 회전시킨다는 것과, 이미지 자체가 이미 회전된 상태(rest angle) 임을 고려해야 합니다.
+우선, upperArm 이미지는 currentJointAngle = 0 일때, x축으로 평행함으로, p.rotate( - currentJointAngle)를 사용하여 랜더링 합니다.
+이후, foreArm 이미지 랜더링 각도는 x3,y3을 구할 때의 각도와 비슷하지만, p.rotate()는 이미지를 회전하는 것이 아닌, 좌표계를 회전하는 방식이다 보니, 이미지 자체의 회전된 각도(foreRestAngle)만큼 각도 차이가 나게 됩니다.
+이 각도 만큼 빼 주어(-foreRestAngle이므로 반시계방향) 이미지의 회전 각도 만큼을 더 회전하여 x3,y3와 이미지의 pen 위치와 맞게 합니다.
 펜 위치 및 실시간 궤적 추가 :
 penX, penY에 x3, y3의 펜 끝 좌표를 저장하여, scale 만큼을 곱한 penScreenX, penScreenY를 계산하고, prevPenState와 $('pen').d를 통해 궤적을 추가합니다. 이 궤적 추가는 수동 모드와, 자동모드 (drawMode === 1)에서 그리기를 보장하기 위함입니다.
 
