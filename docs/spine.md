@@ -285,13 +285,21 @@ buildMotionJsonFromSvg함수는 svgPathPoint를 입력으로 받아, 로봇 팔 
 
 #### 동작 흐름
 
-초기 설정 및 유효성 체크 : 함수가 호출되면 this.jsonBulit를 확인하여, plotto 객체에서 motionJson이 만들어졌는지를 확인합니다. 만든 적이 있다면 다시 만들지 않고 종료합니다.
+**초기 설정 및 유효성 체크** : 함수가 호출되면 this.jsonBulit를 확인하여, plotto 객체에서 motionJson이 만들어졌는지를 확인합니다. 만든 적이 있다면 다시 만들지 않고 종료합니다.
 그런다음 plotto motionJson 리스트를 초기화하고, curStepJ1, curStepJ2(현재 관절 위치를 추적하는 변수)를 0으로 초기화합니다. 또한, ji ~ j2의 각도 최대최소 스탭을 나타내는 (j1MinStep 등) 변수도 스탭 단위로 각도 제한을 저장해둡니다.
 
-보조 함수 moveToTarget(targetJ1, targetJ2, penState)  : 이 내부 함수는 현재 관절 위치에서 목표 관절 위치(targetJ1, targetJ2)까지 펜 상태 penstate로 이동하는데 필요한 d1,d2 명령을 motionJson에 추가합니다.
+##### 보조 함수 moveToTarget(targetJ1, targetJ2, penState)  : 이 내부 함수는 현재 관절 위치에서 목표 관절 위치(targetJ1, targetJ2)까지 펜 상태 penstate로 이동하는데 필요한 d1,d2 명령을 motionJson에 추가합니다.
 `totalDiff1 = targetJ1 - curStepJ1, totalDiff2 = targetJ2 - curStepJ2, maxDiff = max(|totalDiff1|, |totalDiff2|)` 식으로 구해서, 만약 maxDiff가 0이면 펜 상태가 바뀌지 않으면 motionJson에 추가하지 않고, pen 상태가 바뀌는 경우만 motionJson에 추가합니다.
 
 maxDiff가 0이 아니라면, 실제 움직임이 필요한 것이므로, 큰 움직임을 한번에 하지 않고 MAX_STEPS_PT 이하의 작은 단계로 쪼개어 여러 움직임으로 추가합니다.
+
+`rem1 = totalDiff1, rem2 = totalDiff2`으로 남은 이동 스텝을 저장하고, 반복문을 통해서 MAX_STEPS_PT까지 자릅니다. 이후 `$('pen').d = penState;`로 현재 펜 상태를 지정하고, 반복문 안에서는 펜 상태를 바꾸지 않으면서, rem1과 rem2가 0이 될때까지 반복합니다. 이 moveToTarget 함수를 통해 모든 d1, d2가 MAX_STEPS_PT 이하로 이루어집니다.
+
+**홈 위치 -> 첫 번째 경로 점 이동**
+로봇팔이 처음에는 홈 위치(Joint1 : 0도, Joint2 : 0도)에서 시작한다 가정하고, 가장 처음으로 진행하는 일은 svgPathPoints[0]을 가져와서, inverseKinematics2DOF()함수를 호출하는 일 입니다.
+
+
+
 
 
 
