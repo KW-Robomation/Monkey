@@ -271,13 +271,13 @@ function bakeAllToTrailLayer() {
     prevY = y;
     prevPen = $("pen").d;
   }
-
+  // 끝나면 수동 모드
   isPlaying = false;
   drawMode = 0;
   $("pen").d = 0;
   prevPenState = 0;
   prevPenScreenX = null;
-  prevPenScreenY = null; // ✅ 끝나면 수동 모드로
+  prevPenScreenY = null; 
 }
 
 // p5 setup 함수

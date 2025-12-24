@@ -337,7 +337,7 @@ startJsonPlayback(jsonData) 함수는 새로운 그림 그리기나 모션 재�
 #### 실행 동작
 
 **로봇팔 자세 초기화** : currentAngleJoint1, currentAngleJoint2를 0으로 되돌립니다. 이는 현 로봇팔 joint 0,0이 아닐 시 제한 각도를 넘을 수 있기 때문입니다.
-펜 상태 초기화 : $('pen').d = 0으로 펜을 올린 상태로 만듭니다.
+**펜 상태 초기화** : $('pen').d = 0으로 펜을 올린 상태로 만듭니다.
 **이전 프레임 정보 초기화** : prevPenScreenX, prevPenScreenY, prevPenState 모두 초기화(null 또는 0). 펜 궤적 그리기용 이전 기록들을 지워주는 것입니다.
 **궤적 레이어 초기화** : trailLayer.clear()를 호출하여, 이전에 그려진 모든 펜 궤적를 지웁니다.
 
@@ -389,7 +389,7 @@ playJsonStep() 함수는 자동 모드에서 한 스탭의 각도, 펜 상태를
 
 먼저 jsonIndex가 motionJson 길이를 넘지 않았는지 체크합니다.
 이후 현재 index에 해당되는 명령 객체 cmd를 가져옵니다.
-그리고 스텝 증분을 각도로 변환하여 현재 각도 / 펜 상태 를 갱신하고 엔코더 값 **_($("encoder.joint_1").d, $("encoder.joint_2").d)_** 을 업데이트 합니다
+그리고 스텝 증분을 각도로 변환하여 현재 각도 / 펜 상태 를 갱신하고 엔코더 값 ($("encoder.joint_1").d, $("encoder.joint_2").d) 을 업데이트 합니다
 
 이 함수 호출 한 번으로 로봇 팔의 상태(currentAngleJoint\*와 펜 상태)가 한 스텝만큼 변화하며, 해당 변화가 UI와 내부 상태에 모두 반영됩니다. 이후 drawSimulator의 나머지 부분에서 이 업데이트된 각도에 따라 로봇 그림이 새로 그려지게 됩니다.
 
@@ -576,7 +576,7 @@ setupSimulator(p) 함수는 p5.js가 요구하는 setup 함수로, 시뮬레이�
 #### 실행 동작
 
 **캔버스 크기 설정** : canvasWidth, canvasHeight를 통해 캔버스 크기를 결정합니다. 또한 p.frameRate(100)을 통해 p5의 프레임레이트를 100으로 설정합니다.
-이미지 리소스 : spine.images.get()을 통해 이미지의 실제 경로를 얻고, p.loadImage()를 호출하여 경로의 이미지를 로드합니다.
+**이미지 리소스**: spine.images.get()을 통해 이미지의 실제 경로를 얻고, p.loadImage()를 호출하여 경로의 이미지를 로드합니다.
 
 **초기 값 설정** : initLinkGeometry(), initBasePosition() 함수 호출을 통해 baseX,baseY와 링크 길이와 각도(link1Length, link2Length, upperRestAngle, foreRestAngle)를 계산합니다. 이후 계산한 값을 plotto.configure({ ... })을 통해 plotto 객체에 전달합니다.
 
@@ -587,6 +587,9 @@ setupSimulator(p) 함수는 p5.js가 요구하는 setup 함수로, 시뮬레이�
 setupSimulator()는 시뮬레이터가 동작하기 위한 모든 초기 준비 작업을 수행합니다. 화면 구성, 리소스 로드, 기하계산, 전역상태 세팅, UI 동기화 등을 마치고, 마지막에 캔버스를 만들어놨으므로, 이후 자동으로 p5가 drawSimulator 함수를 매 프레임 호출하게 됩니다.
 
 ### drawSimulator(p)
+<details>
+<summary><b>함수 보기</b></summary>
+<div markdown="1">
 
 ```javascript
 function drawSimulator(p) {
@@ -737,6 +740,9 @@ function drawSimulator(p) {
 }
 ```
 
+</div>
+</details>
+
 drawSimulator(p) 함수는 p5.js의 draw 루프 함수로, 화면을 지속적으로 업데이트하여 애니메이션과 상호작용을 처리합니다.
 이 함수는 매 프레임 호출되며, 내부에서 현재 모드와 상태에 따라 로봇 팔의 움직임과 그리기를 수행합니다.
 
@@ -813,7 +819,7 @@ x2,y2를 구할때 사용한 각도 theta1 + upperRestAngle(노란 부채꼴 각
 
 ![](https://github.com/user-attachments/assets/fa0ff823-0654-4730-b21b-0e54b57b1845)
 그림은 currentAngle1 / 2 가 0일때를 가정한 예시입니다.
-이미지 렌더링은 관절위치 계산과 유사하지만, p.rotate가 이미지가 아닌 좌표계를 회전시킨다는 것과, 이미지 자체가 이미 회전된 상태(rest angle) 임을 고려해야 합니다.
+이미지 렌더링은 관절위치 계산과 유사하지만, p.rotate가 이미지가 아닌 좌표계를 회전시킨다는 것과, 이미지 자체가 이미 회전된 상태(rest angle) 임을 고려해야 합니다.  
 우선, upperArm 이미지는 currentJointAngle = 0 일때, x축으로 평행함으로, p.rotate( - currentJointAngle)를 사용하여 렌더링 합니다.
 이후, foreArm 이미지 렌더링 각도는 x3,y3을 구할 때의 각도와 비슷하지만, p.rotate()는 이미지를 회전하는 것이 아닌, 좌표계를 회전하는 방식이다 보니, 이미지 자체의 회전된 각도(foreRestAngle)만큼 각도 차이가 나게 됩니다.
 이 각도 만큼 빼 주어(-foreRestAngle이므로 반시계방향) 이미지의 회전 각도 만큼을 더 회전하여 x3,y3와 이미지의 pen 위치와 맞게 합니다.
