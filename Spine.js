@@ -602,12 +602,47 @@ function extractPathPointsFromSvg(svgText, opts = {}) {
         return `M ${x0},${y} A ${r},${r} 0 1,1 ${x1},${y} A ${r},${r} 0 1,1 ${x0},${y} Z`;
     }
 
-    function ellipseToPathLocal(cx, cy, rx, ry) {
-        const x0 = cx - rx;
-        const x1 = cx + rx;
-        const y = cy;
-        // sweep-flag를 1로 변경 (반시계방향)
-        return `M ${x0},${y} A ${rx},${ry} 0 1,1 ${x1},${y} A ${rx},${ry} 0 1,1 ${x0},${y} Z`;
+    function ellipseToPathLocal(cx, cy, rx, ry, rotation = 0) {
+        const K = 0.5522847498307936;
+
+        const ox = rx * K;
+        const oy = ry * K;
+
+        // 회전 행렬
+        const rad = (rotation * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        // 점을 회전시키는 헬퍼 함수
+        const rotate = (x, y) => ({
+            x: cx + (x - cx) * cos - (y - cy) * sin,
+            y: cy + (x - cx) * sin + (y - cy) * cos
+        });
+
+        // 로컬 좌표계에서의 점들
+        const left = rotate(cx - rx, cy);
+        const top = rotate(cx, cy - ry);
+        const right = rotate(cx + rx, cy);
+        const bottom = rotate(cx, cy + ry);
+
+        // 제어점들도 회전
+        const c1 = rotate(cx - rx, cy - oy);
+        const c2 = rotate(cx - ox, cy - ry);
+        const c3 = rotate(cx + ox, cy - ry);
+        const c4 = rotate(cx + rx, cy - oy);
+        const c5 = rotate(cx + rx, cy + oy);
+        const c6 = rotate(cx + ox, cy + ry);
+        const c7 = rotate(cx - ox, cy + ry);
+        const c8 = rotate(cx - rx, cy + oy);
+
+        return [
+            `M ${left.x},${left.y}`,
+            `C ${c1.x},${c1.y} ${c2.x},${c2.y} ${top.x},${top.y}`,
+            `C ${c3.x},${c3.y} ${c4.x},${c4.y} ${right.x},${right.y}`,
+            `C ${c5.x},${c5.y} ${c6.x},${c6.y} ${bottom.x},${bottom.y}`,
+            `C ${c7.x},${c7.y} ${c8.x},${c8.y} ${left.x},${left.y}`,
+            'Z'
+        ].join(' ');
     }
 
     function rectToPathLocal(x, y, w, h, rx, ry) {
@@ -770,7 +805,15 @@ function extractPathPointsFromSvg(svgText, opts = {}) {
             const cy = parseFloat(el.getAttribute("cy")) || 0;
             const rx = parseFloat(el.getAttribute("rx")) || 0;
             const ry = parseFloat(el.getAttribute("ry")) || 0;
-            dAttr = ellipseToPathLocal(cx, cy, rx, ry);
+
+            // transform에서 회전 각도 추출
+            let rotation = 0;
+            if (transformMatrix) {
+                const m = transformMatrix;
+                rotation = Math.atan2(m.b, m.a) * (180 / Math.PI);
+            }
+
+            dAttr = ellipseToPathLocal(cx, cy, rx, ry, rotation);
         } else if (tagName === "rect") {
             const x = parseFloat(el.getAttribute("x")) || 0;
             const y = parseFloat(el.getAttribute("y")) || 0;
