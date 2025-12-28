@@ -1,25 +1,19 @@
-// === J1 / J2 전용 대시보드 ===
-
-// 심플 슬라이더 생성기 (HTML range)
-
-// === 제어 로직 ===
+//초기화 변수
 let init = false;
-// angles[0] = J1, angles[1] = J2
+// 각도 저장 배열
 let angles = [0, 0];
-// 모드 전환용 변수, false = SVG, true = Plotto FK 모드
-
-// 슬라이더가 지정하는 목표 각도
+// 목표 각도 배열
 let targetAngles = [0, 0];
 
 let useSimpleFK = false;
 
 // 키 입력에 따른 변화량 (degree 단위)
-const KEY_STEP = 1.5;  // 너무 빠르면 줄이기/늘리기
+const KEY_STEP = 1.5;
 // SVG 드롭 상태 표시
 let lastSvgName = "(none)";
 let lastSvgSize = 0;
 let lastSvgStatus = "No SVG loaded";
-
+//슬라이더 생성 함수
 function createSlider(parent, cfg, id, min, max, initial) {
   const [W, X, Y] = cfg;
 
@@ -40,7 +34,7 @@ function createSlider(parent, cfg, id, min, max, initial) {
         `);
 }
 
-// 버튼 생성기 (HTML button)
+// 버튼 생성 함수
 function createButton(parent, cfg, id, label, onClick) {
   const [W, X, Y] = cfg;
 
@@ -52,7 +46,7 @@ function createButton(parent, cfg, id, label, onClick) {
   if (onClick) select("#" + id).on("click", onClick);
 }
 
-// 팝업에 J1/J2/Speed 슬라이더 + 버튼 표시
+//팝업 함수
 function dashboard() {
   w2popup.resize(470, 610);
   window.onresize = () => {
@@ -75,7 +69,6 @@ function dashboard() {
     .style("background", "#fff")
     .style("border", "1px solid #ddd");
 
-  // 제목
   frame
     .append("text")
     .attr("x", 15)
@@ -83,7 +76,7 @@ function dashboard() {
     .attr("font-size", "12px")
     .text("J1 / J2 Joint Angle Control");
 
-  // === SVG Drag & Drop 안내 영역 ==========================================
+  // SVG Drag & Drop 안내 영역 UI
   frame.append("rect")
     .attr("x", 15)
     .attr("y", 15)
@@ -111,7 +104,7 @@ function dashboard() {
   const sliderWidth = 260;
   const sliderX = 120;
 
-  // J1 슬라이더 -----------------------------------------------------------------
+  // J1 슬라이더 
   const J1 = frame.append("g");
   J1.append("text")
     .attr("x", 15)
@@ -135,7 +128,7 @@ function dashboard() {
     targetAngles[0] = parseFloat(this.value);
   });
 
-  // J2 슬라이더 -----------------------------------------------------------------
+  // J2 슬라이더
   const J2 = frame.append("g");
   J2.append("text")
     .attr("x", 15)
@@ -160,7 +153,7 @@ function dashboard() {
     targetAngles[1] = parseFloat(this.value);
   });
 
-  //   Pen Up/Down 버튼  -----------------------------------------------------------------
+  //   Pen Up/Down 버튼
   const penBtn = frame.append("g");
   createButton(penBtn, [300, 50, 270], "pen_toggle_btn", "Pen Down");
 
@@ -171,7 +164,6 @@ function dashboard() {
   select("#pen_toggle_btn").on("click", () => {
     penIsDown = !penIsDown;
 
-    //  핵심: p5에서 쓰는 currentPen을 여기서 직접 바꿔준다
     $('pen').d = penIsDown ? 1 : 0;
 
     // 버튼 텍스트 변경
@@ -179,7 +171,7 @@ function dashboard() {
     console.log("Pen toggled →", penIsDown ? "UP (0)" : "DOWN (1)");
   });
 
-  // Erase 버튼  -----------------------------------------------------------------
+  // Erase 버튼 
   const fkBtn = frame.append("g");
   createButton(fkBtn, [300, 50, 310], "erase_btn", "Erase");
 
@@ -187,13 +179,12 @@ function dashboard() {
     trailLayer.clear();
   });
 
-  // SVG Draw 버튼  -----------------------------------------------------------------
+  // SVG Draw 버튼  
   const drawBtn = frame.append("g");
   createButton(drawBtn, [300, 50, 350], "svg_draw_btn", "SVG Draw");
-
+  // 자동 모드 (1)
   select("#svg_draw_btn").on("click", () => {
-    // 재생 시작
-    drawMode = 1; // drawMode는 sketch에 정의되어 있는 변수입니다.
+    drawMode = 1; // drawMode는 sketch에 정의되어 있는 변수 0 (수동), 1 ~ 3(자동)
     startJsonPlayback();
     $("encoder.joint_1").d = degToStep(currentAngleJoint1);
     $("encoder.joint_2").d = degToStep(currentAngleJoint2);
@@ -202,9 +193,8 @@ function dashboard() {
 
   const manualBtn = frame.append("g");
   createButton(manualBtn, [300, 50, 390], "draw_manual_btn", "Draw Manual");
-
+  // 수동 모드 (0)
   select("#draw_manual_btn").on("click", () => {
-    // 재생 시작
     drawMode = 0;
     $('pen').d = 0;
 
@@ -213,9 +203,8 @@ function dashboard() {
 
   const drawFastBtm = frame.append("g");
   createButton(drawFastBtm, [300, 50, 430], "svg_draw_fast_btn", "SVG Draw Fast");
-
+  // 자동 모드 (2)
   select("#svg_draw_fast_btn").on("click", () => {
-    // 재생 시작
     drawMode = 2;
     $('pen').d = 0;
     startJsonPlayback();
@@ -226,9 +215,8 @@ function dashboard() {
 
   const drawAllBtm = frame.append("g");
   createButton(drawAllBtm, [300, 50, 470], "svg_draw_all_btn", "SVG Draw All");
-
+  // 자동 모드 (3)
   select("#svg_draw_all_btn").on("click", () => {
-    // 재생 시작
     drawMode = 3;
     $('pen').d = 0;
     startJsonPlayback();
@@ -242,7 +230,7 @@ function dashboard() {
     downloadPlotTxtDecSpace("motion_plot.txt"); // ✅ 이 함수는 전역에 있어야 함 (Sketch.js에 두는 걸 추천)
   });
 }
-// === 키보드 이벤트 처리 ===
+// 키보드 이벤트
 window.addEventListener("keydown", (e) => {
 
   let changed = false;
@@ -269,17 +257,16 @@ window.addEventListener("keydown", (e) => {
       break;
 
     default:
-      return; // 다른 키는 무시
+      return;
   }
 
-  // 변경 없으면 종료
   if (!changed) return;
 
-  // --- 각도 제한 ---
+  // 각도 제한
   targetAngles[0] = Math.max(-30, Math.min(180, targetAngles[0])); // J1
   targetAngles[1] = Math.max(-90, Math.min(10, targetAngles[1]));  // J2
 
-  // --- 슬라이더도 업데이트 ---
+  // 슬라이더 업데이트
   if (select("#angle_J1").node()) {
     select("#angle_J1").property("value", targetAngles[0]);
     select("#angle_J1_val").html(targetAngles[0].toFixed(1) + "°");
@@ -295,7 +282,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 function control() {
-  // 1) 첫 호출에서 엔코더 값으로 초기화
+  // 첫 호출에서 엔코더 값으로 초기화
   if (!init) {
     init = true;
 
@@ -312,13 +299,12 @@ function control() {
       select("#angle_J2").property("value", angles[1]);
     }
 
-    // 속도 기본값 100
     if (select("#angle_speed").node()) {
-      select("#angle_speed").property("value", 100);
+      select("#angle_speed").property("value", 100); // 속도 기본값 100
     }
   }
 
-  // 2) 매 프레임마다 슬라이더 값 읽어서 angles[] 업데이트
+  // 매 프레임마다 슬라이더 값 읽어서 angles[] 업데이트
   if (select("#angle_J1").node()) {
     $("encoder.joint_1").d = degToStep(parseFloat(select("#angle_J1").property("value")));
   }
@@ -326,7 +312,7 @@ function control() {
     $("encoder.joint_2").d = degToStep(parseFloat(select("#angle_J2").property("value")));
   }
 
-  let lerpSpeed = 0.05; // 0~1, 클수록 빠름
+  let lerpSpeed = 0.05; // 0~1 사이 값, 클수록 빠름
   for (let i = 0; i < 2; i++) {
     angles[i] = angles[i] + (targetAngles[i] - angles[i]) * lerpSpeed;
   }
@@ -338,11 +324,11 @@ function setupSvgDragDrop(popup_box_selection) {
   const el = popup_box_selection.node();
   if (!el) return;
 
-  // ✅ 이미 등록했으면 재등록 방지
+  // 이미 등록했으면 재등록 방지
   if (el.__svg_drop_ready__) return;
   el.__svg_drop_ready__ = true;
 
-  // ---- TXT plot 파서 ----
+  // TXT plot 파서 
   function parsePlotTxt(text) {
     // "10 20 30 ..." 공백/줄바꿈 구분 허용
     const arr = text
@@ -350,7 +336,7 @@ function setupSvgDragDrop(popup_box_selection) {
       .split(/\s+/)
       .map(Number);
 
-    // 0~255 정수만 남기기
+    // 0~255 정수만 남기기(1바이트 이므로)
     const bytes = arr.filter(n => Number.isInteger(n) && n >= 0 && n <= 255);
 
     return bytes;
@@ -370,7 +356,7 @@ function setupSvgDragDrop(popup_box_selection) {
     el.style.outlineOffset = "";
   });
 
-  // ✅ 드롭 처리
+  // 드롭 처리
   el.addEventListener("drop", async (e) => {
     e.preventDefault();
     el.style.outline = "";
@@ -389,7 +375,7 @@ function setupSvgDragDrop(popup_box_selection) {
       file.type === "text/plain" ||
       lower.endsWith(".txt");
 
-    // ✅ SVG/TXT 둘 다 허용
+    // SVG/TXT 둘 다 허용
     if (!isSvg && !isTxt) {
       lastSvgName = file.name || "(unknown)";
       lastSvgSize = file.size || 0;
@@ -400,7 +386,7 @@ function setupSvgDragDrop(popup_box_selection) {
       return;
     }
 
-    // ✅ 로딩 시작 상태 표시
+    // 로딩 시작 상태 표시
     lastSvgName = file.name;
     lastSvgSize = file.size || 0;
     lastSvgStatus = "Loading...";
@@ -413,9 +399,7 @@ function setupSvgDragDrop(popup_box_selection) {
       const text = await file.text();
       window.currentSvgName = file.name;
 
-      // =========================
-      // 1) SVG 처리
-      // =========================
+      // SVG 처리 파트
       if (isSvg) {
         const looksLikeSvg = (text && text.includes("<svg"));
         if (!looksLikeSvg) {
@@ -442,11 +426,9 @@ function setupSvgDragDrop(popup_box_selection) {
         return;
       }
 
-      // =========================
-      // 2) TXT(plot) 처리
-      // =========================
+      // TXT 처리 파트
       if (isTxt) {
-        // plotDecode가 전역이어야 함
+        // plotDecode가 전역이어야 함(spine에 정의되어 있는 부분)
         if (typeof window.plotDecode !== "function" && typeof plotDecode !== "function") {
           lastSvgStatus = "plotDecode() missing ❌";
           const t = document.getElementById("svg_status_text");
@@ -464,16 +446,16 @@ function setupSvgDragDrop(popup_box_selection) {
           return;
         }
 
-        // 1) plotto.plot에 저장
+        // plotto.plot에 저장
         plotto.plot = bytes;
 
-        // 2) decode 해서 motionJson 생성
+        // decode 해서 motionJson 생성
         const decoder = (typeof plotDecode === "function") ? plotDecode : window.plotDecode;
         const motion = decoder(bytes);
 
         plotto.motionJson = motion;
 
-        // 3) 재생 상태 초기화(있으면)
+        // 재생 상태 초기화
         plotto.jsonBuilt = true;
         if (typeof startJsonPlayback === "function") startJsonPlayback();
 
@@ -493,7 +475,7 @@ function setupSvgDragDrop(popup_box_selection) {
     }
   });
 }
-// === 플롯 TXT 다운로드 함수 (10진수 공백 구분) ===
+// 플롯 TXT 다운로드 함수 (10진수 공백 구분)
 
 function downloadPlotTxtDecSpace(filename = "motion_plot.txt") {
   if (!plotto.plot || plotto.plot.length === 0) {
@@ -501,7 +483,7 @@ function downloadPlotTxtDecSpace(filename = "motion_plot.txt") {
     return;
   }
 
-  const text = plotto.plot.join(" "); // ✅ 10진수 공백 구분
+  const text = plotto.plot.join(" "); // 10진수 공백 구분
 
   const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -518,7 +500,7 @@ function downloadPlotTxtDecSpace(filename = "motion_plot.txt") {
 // 드롭다운 시 svg 재빌드 함수
 window.rebuildFromSvgText = function (svgText) {
 
-  // 엔진 처리: plotto에게 위임
+  // spine 내의 plotto에서 svgText를 통한 motionJson, plot 생성
   if (plotto && typeof plotto.buildFromSvgText === "function") {
     plotto.buildFromSvgText(svgText);
   } else {
@@ -526,6 +508,6 @@ window.rebuildFromSvgText = function (svgText) {
     return;
   }
 
-  // 렌더링(재생)은 sketch에게
+  // 렌더링은 sketch에서 담당
   if (typeof startJsonPlayback === "function") startJsonPlayback();
 };
