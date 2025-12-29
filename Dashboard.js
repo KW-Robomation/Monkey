@@ -226,7 +226,7 @@ function dashboard() {
   });
 
   createButton(frame, [200, 20, 510], "download_txt_btn", "Download TXT", () => {
-    downloadPlotTxtDecSpace("motion_plot.txt"); // ✅ 이 함수는 전역에 있어야 함 (Sketch.js에 두는 걸 추천)
+    downloadPlotTxtDecSpace("motion_plot.txt"); 
   });
 }
 // 키보드 이벤트
