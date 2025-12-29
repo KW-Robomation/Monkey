@@ -8,7 +8,7 @@ let targetAngles = [0, 0];
 let useSimpleFK = false;
 
 // 키 입력에 따른 변화량 (degree 단위)
-const KEY_STEP = 1.5;
+const KEY_STEP = 1.0;
 // SVG 드롭 상태 표시
 let lastSvgName = "(none)";
 let lastSvgSize = 0;
@@ -136,7 +136,7 @@ function dashboard() {
     .attr("font-size", "12px")
     .text("J2 ↑ ↓");
 
-  createSlider(J2, [sliderWidth, sliderX, 130], "angle_J2", -90, 10, 0);
+  createSlider(J2, [sliderWidth, sliderX, 130], "angle_J2", -100, 15, 0);
 
   //  J2 값 표시 UI 추가
   J2.append("foreignObject")
@@ -264,7 +264,7 @@ window.addEventListener("keydown", (e) => {
 
   // 각도 제한
   targetAngles[0] = Math.max(-30, Math.min(180, targetAngles[0])); // J1
-  targetAngles[1] = Math.max(-90, Math.min(10, targetAngles[1]));  // J2
+  targetAngles[1] = Math.max(-100, Math.min(15, targetAngles[1]));  // J2
 
   // 슬라이더 업데이트
   if (select("#angle_J1").node()) {
