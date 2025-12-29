@@ -53,11 +53,10 @@ function dashboard() {
     w2popup.resize(470, 610);
   };
   w2popup.on("close", () => {
-    // 키보드 이벤트 같은 거 더 이상 안 씀
   });
 
   const popup_box = select("#dashboard");
-  popup_box.html(""); // 기존 내용 싹 지우기
+  popup_box.html(""); 
   popup_box.style("user_select", "none");
 
   setupSvgDragDrop(popup_box);
@@ -428,7 +427,7 @@ function setupSvgDragDrop(popup_box_selection) {
 
       // TXT 처리 파트
       if (isTxt) {
-        // plotDecode가 전역이어야 함(spine에 정의되어 있는 부분)
+        // plotDecode는 spine에 정의된 함수
         if (typeof window.plotDecode !== "function" && typeof plotDecode !== "function") {
           lastSvgStatus = "plotDecode() missing ❌";
           const t = document.getElementById("svg_status_text");

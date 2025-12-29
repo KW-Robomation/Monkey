@@ -14,25 +14,26 @@ const FORE_PEN_Y = 612;
 const imageScale = 0.5;
 
 class Plotto {
+    //JOINT1,2 최대 최소
     #minEncoderJoint1 = -30;
     #maxEncoderJoint1 = 180;
     #minEncoderJoint2 = -100;
     #maxEncoderJoint2 = 30;
-    #motionJson = [];
-    #plot = [];
-    #svgPathPoints = [];
-    #baseX = 0;
-    #baseY = 0;
-    #link1 = 0;
-    #link2 = 0;
-    #upperRestAngle = 0;
-    #foreRestAngle = 0;
-    #JOINT2_OFFSET = 143;
-    #jsonBuilt = false;
-    #STEP_DEG = (11.25 / 64) / 16;
-    #MAX_STEPS_PT = 7;
-    #MAX_DELTA_DEG = this.#STEP_DEG * this.#MAX_STEPS_PT;
-    #SVG_BOX_SIZE = 250;
+    #motionJson = []; // {d1, d2, pen} 객체 배열
+    #plot = []; // 1byte 단위 인코딩 배열
+    #svgPathPoints = []; // {x,y,pen} 객체 배열
+    #baseX = 0; // joint1 모터 X 좌표
+    #baseY = 0; // joint1 모터 Y 좌표
+    #link1 = 0; // 상부 팔 길이 
+    #link2 = 0; // 하부 팔 길이
+    #upperRestAngle = 0; // 이미지 상 상부 팔 각도 (rad)
+    #foreRestAngle = 0; // 이미지 상 하부 팔 각도 (rad)
+    #JOINT2_OFFSET = 143; // joint2 오프셋 각도 (물리적 0도 위치 보정)
+    #jsonBuilt = false; // motionJson 생성 여부
+    #STEP_DEG = (11.25 / 64) / 16; // 스탭 당 각도
+    #MAX_STEPS_PT = 7; // 한 명령당 최대 스탭 수
+    #MAX_DELTA_DEG = this.#STEP_DEG * this.#MAX_STEPS_PT; // 한 명령당 최대 각도 변화량
+    #SVG_BOX_SIZE = 250; // SVG 정규화 박스 크기
 
     // constructor 
     constructor() {
@@ -164,6 +165,7 @@ class Plotto {
         this.plot = [];
         this.initLinkGeometry();
     }
+    // 순 방향 기구학 함수
     fkPenXY_deg(j1Deg, j2Deg) {
         const theta1 = (j1Deg * Math.PI / 180) * -1;
 
@@ -180,6 +182,7 @@ class Plotto {
 
         return { x: x3, y: y3 };
     }
+    // 역 방향 기구학 함수
     inverseKinematics2DOF(targetX, targetY, prevJ1Deg, prevJ2Deg) {
         const L1 = this.link1;
         const L2 = this.link2;
@@ -255,6 +258,7 @@ class Plotto {
 
         return aValid ? solA : solB;
     }
+    // SVG 텍스트로부터 motionJson, plot 빌드 함수
     buildFromSvgText(svgText, opts = {}) {
         // opts로 설정 가능
         const k = opts.k ?? 1.0;                 // SVG_BOX -> 로봇 공간 스케일
@@ -285,6 +289,7 @@ class Plotto {
         // 6) motionJson + plot 생성
         this.buildMotionJsonFromSvg();   // 아래 메서드 필요
     }
+    // svgPathPoints로부터 motionJson, plot 빌드 함수
     buildMotionJsonFromSvg() {
         if (this.jsonBuilt) return;
         if (!this.svgPathPoints || this.svgPathPoints.length === 0) return;
@@ -412,6 +417,7 @@ class Plotto {
             console.error("plotEncode 오류:", err);
         }
     }
+    // 링크 길이 및 각도 초기화 함수
     initLinkGeometry() {
         // upperarm 길이 각도
         {
@@ -436,6 +442,7 @@ class Plotto {
         }
     }
 }
+// 각도 정규화 함수
 function normalizeAngle(angle) {
     // angle을 -180 ~ 180 범위로 정규화
     while (angle > 180) angle -= 360;
@@ -487,7 +494,7 @@ function extractPathPointsFromSvg(svgText, opts = {}) {
         const rad = (deg * Math.PI) / 180;
         return { a: 1, b: Math.tan(rad), c: 0, d: 1, e: 0, f: 0 };
     };
-
+    // 2D 행렬 곱셈 함수
     function multiplyMatrices(m1, m2) {
         if (!m1) return m2;
         if (!m2) return m1;
@@ -594,13 +601,12 @@ function extractPathPointsFromSvg(svgText, opts = {}) {
         return true;
     }
 
-    // path d 안에서 subpath(M/m) 단위로 분해
-
+    // path d 안에서 subpath(M/m) 단위로 분해하는 함수(절대 좌표로 변환)
     function splitSubpathsFixed(dAttr) {
         const d = (dAttr ?? "").trim();
         if (!d) return [];
 
-        // 1) 토큰화: 명령문자 or 숫자
+        // 토큰화: 명령문자 or 숫자
         // - e/E 지수 표기 포함
         const tokens = d.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?/g);
         if (!tokens) return [];
@@ -790,14 +796,14 @@ function extractPathPointsFromSvg(svgText, opts = {}) {
         return out;
     }
 
-    // Local shape -> local path
+    // circle을 path로 변환하는 함수
     function circleToPathLocal(cx, cy, r) {
         const x0 = cx - r;
         const x1 = cx + r;
         const y = cy;
         return `M ${x0},${y} A ${r},${r} 0 1,1 ${x1},${y} A ${r},${r} 0 1,1 ${x0},${y} Z`;
     }
-
+    // ellipse를 path로 변환하는 함수
     function ellipseToPathLocal(cx, cy, rx, ry, rotation = 0) {
         const K = 0.5522847498307936; // 베지어 근사 사용 카파 상수
 
@@ -836,7 +842,7 @@ function extractPathPointsFromSvg(svgText, opts = {}) {
             'Z'
         ].join(' ');
     }
-
+    // rect를 path로 변환하는 함수
     function rectToPathLocal(x, y, w, h, rx, ry) {
         if ((rx && !ry) || (ry && !rx)) {
             rx = rx || ry;
@@ -898,11 +904,11 @@ function extractPathPointsFromSvg(svgText, opts = {}) {
             "Z",
         ].join(" ");
     }
-
+    // line을 path로 변환하는 함수
     function lineToPathLocal(x1, y1, x2, y2) {
         return `M ${x1},${y1} L ${x2},${y2}`;
     }
-
+    // polygon/polyline을 path로 변환하는 함수
     function polyToPathLocal(pointsStr, close) {
         const coords = pointsStr
             .trim()
@@ -919,8 +925,7 @@ function extractPathPointsFromSvg(svgText, opts = {}) {
         return d;
     }
 
-    // <use> resolve (transform 올바르게 합성)
-    // final = parentAcc * useOwnTransform * T(x,y) * refTransform
+    // use 요소 해석 함수
     function resolveUseElement(useEl) {
         const href = useEl.getAttribute("href") || useEl.getAttribute("xlink:href");
         if (!href) return null;
@@ -945,9 +950,9 @@ function extractPathPointsFromSvg(svgText, opts = {}) {
         return { element: ref, transform: M, tagName: ref.tagName.toLowerCase() };
     }
 
-    // Collect elements
+    // 그려질 요소 수집 배열
     const allElements = [];
-
+    // 직접 그려지는 요소들 추가
     const directShapes = svgRoot.querySelectorAll(
         "path, circle, rect, ellipse, line, polygon, polyline"
     );
@@ -1190,7 +1195,7 @@ function mapBoxToRobotTargets(points, k = 1.0, flipY = false) {
     });
 }
 
-// 각도 변화량 기준 리샘플링
+// 각도 변화량 기준 리샘플링 함수
 function resamplePathByAngle(points, maxDeltaDeg = plotto.MAX_DELTA_DEG) {
     if (!points || points.length === 0) return [];
 
@@ -1257,8 +1262,7 @@ function resamplePathByAngle(points, maxDeltaDeg = plotto.MAX_DELTA_DEG) {
 
     return result;
 }
-
-
+// plot 데이터 인코딩/디코딩 함수
 function encodeNibble(d) {
     const map = {
         [-7]: 0b1001,
@@ -1313,7 +1317,7 @@ function decodeDeltaByte(byte) {
     return { d1: decodeNibble(hi), d2: decodeNibble(lo) };
 }
 
-// motionJson -> plot(bytes)
+// motionJson 에서 plot(bytes)로 변환하는 함수
 function plotEncode(motionJson) {
     if (!Array.isArray(motionJson)) {
         throw new Error("plotEncode: motionJson must be an array");
@@ -1337,14 +1341,14 @@ function plotEncode(motionJson) {
     return out;
 }
 
-// plot(bytes) -> motionJson
+// plot(bytes) 에서 motionJson로 변환하는 함수
 function plotDecode(byteArray) {
     if (!Array.isArray(byteArray)) {
         throw new Error("plotDecode: byteArray must be an array");
     }
 
     const out = [];
-    let pen = 0; // 지역 변수로만 처리
+    let pen = 0; 
 
     for (let i = 0; i < byteArray.length; i++) {
         const b = byteArray[i];

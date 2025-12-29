@@ -8,10 +8,10 @@ function sketch() {
 }
 
 // 그리기 모드 관련 변수
-let drawMode = 0;
-let bakedOnce = false;
+let drawMode = 0; // 0: 수동, 1: 자동(한프레임씩), 2: 자동(가속), 3: 자동(한번에)
+let bakedOnce = false; // 전체 경로를 그렸는지 여부
 
-let jsonIndex = 0;
+let jsonIndex = 0; // 자동 모드 실행시 사용 하는 JSON 인덱스
 
 const JOINT2_OFFSET = 143; // joint2가 0도일 때, 팔이 ㄷ자 모양이 되도록 오프셋 각도
 
@@ -23,23 +23,23 @@ let foreRestAngle = 0; // forearm 이미지 기울어진 각도
 let canvasWidth, canvasHeight;
 
 let baseX, baseY; // Joint 1 x,y 좌표
-let link1Length, link2Length;
+let link1Length, link2Length; // 링크 길이
 
-let imgTop, imgUpper, imgFore;
-let topPath, upperPath, forePath;
+let imgTop, imgUpper, imgFore; // 이미지 객체
+let topPath, upperPath, forePath; // 이미지 경로
 
 let currentAngleJoint1 = 0; // 로봇 팔 joint1 각도
 let currentAngleJoint2 = 0; // 로봇 팔 joint2 각도
 
-// 관절 범위 변수
+// 시뮬레이션 중 기록한 최대 최소 각도
 let minJoint1 = 1e9;
 let maxJoint1 = -1e9;
 let minJoint2 = 1e9;
 let maxJoint2 = -1e9;
 
 const scale = 0.7; // 전체 캔버스 스케일
-const moreHeight = 100;
-
+const moreHeight = 100; // 캔버스 높이 보정값
+// plotto 에서 정의한 관절 최대/최소 함수
 function J1_MIN() {
   return plotto.minJoint1;
 }
@@ -58,10 +58,10 @@ let isPlaying = false;
 let debugFrame = 0;
 
 // 궤적 그리기 관련 변수
-let trailLayer = null;
-let prevPenScreenX = null;
-let prevPenScreenY = null;
-let prevPenState = 0;
+let trailLayer = null; // 궤적 그래픽 레이어
+let prevPenScreenX = null; // 이전 프레임 펜 X 좌표
+let prevPenScreenY = null; // 이전 프레임 펜 Y 좌표
+let prevPenState = 0; // 이전 프레임 펜 상태
 
 // 팝업 함수
 function openRobotPopup() {
