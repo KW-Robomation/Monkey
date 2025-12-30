@@ -14,7 +14,9 @@
  - 로드가 완료되었다면, 대시보드를 클릭하여 프로그램을 실행하시면 됩니다.
  - ![](https://github.com/user-attachments/assets/1bafdb8e-dadd-4148-b64f-e85f6843374e)
  - 이후, 프로그램 사용 법은 저장소 https://github.com/KW-Robomation/Monkey/wiki 를 참고해주세요.
- - **또한, 동작(그리기)가 실행되지 않는다면, 새로고침 후 다시 실행해주세요.**
+  
+## 오류가 있는 경우
+  동작(그리기)가 실행되지 않는다면, 새로고침 후 다시 실행해주세요.
 ## Documentation
 
 - [plotto Path 구조 및 통신 방식](docs/plotto_Path.md)
