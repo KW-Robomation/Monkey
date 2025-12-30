@@ -5,7 +5,7 @@
 
 ## 사용 방법
  - 저장소 내의 simulator-plotto.roboid를 다운로드 받습니다.
- - 다운로드가 완료 되었다면, https://rbmate.com/RoboidModeler/에 접속합니다.<br>
+ - 다운로드가 완료 되었다면, https://rbmate.com/RoboidModeler/ 에 접속합니다.<br>
    ![](https://github.com/user-attachments/assets/8690a508-5aec-4471-93dd-4be11a8284df)
  - 좌측 상단 -> 열기 -> 다운로드 받은 simulator-plotto.roboid를 선택합니다.<br>
    <img width="368" height="326" alt="Image" src="https://github.com/user-attachments/assets/acbc2a0b-7dae-44dc-9e0a-3f83f3ebe266" />
