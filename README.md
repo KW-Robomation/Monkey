@@ -12,6 +12,7 @@
  - 다음과 같은 블록 화면이 되었다면 로드가 정상적으로 완료 된 것 입니다.
    ![](https://github.com/user-attachments/assets/400dd5d3-d126-4bc2-99bb-fd073c2e2cfe)
  - 로드가 완료되었다면, 대시보드를 클릭하여 프로그램을 실행하시면 됩니다.
+ - ![](https://github.com/user-attachments/assets/1bafdb8e-dadd-4148-b64f-e85f6843374e)
  - 이후, 프로그램 사용 법은 저장소 https://github.com/KW-Robomation/Monkey/wiki 를 참고해주세요.
 ## Documentation
 
