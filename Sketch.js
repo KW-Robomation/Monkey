@@ -289,9 +289,9 @@ function setupSimulator(p) {
   p.frameRate(100);
 
   // Spine에서 이미지 리소스 / 경로 가져오기
-  topPath = spine.images.get("top_reverse.png");
-  upperPath = spine.images.get("upperarm_reverse.png");
-  forePath = spine.images.get("forearm_reverse.png");
+  topPath = spine.images.get("TOP.png");
+  upperPath = spine.images.get("UPPER_ARM.png");
+  forePath = spine.images.get("FORE_ARM.png");
   imgTop = p.loadImage(topPath);
   imgUpper = p.loadImage(upperPath);
   imgFore = p.loadImage(forePath);

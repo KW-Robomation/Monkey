@@ -1,16 +1,16 @@
 // 로봇 팔 이미지 정보 (plot 생성시 꼭 필요한 정보들)
 const TOP_JOINT_X = 220;
-const TOP_JOINT_Y = 547;
+const TOP_JOINT_Y = 544;
 
-const UPPER_JOINT_BASE_X = 747;
-const UPPER_JOINT_BASE_Y = 226;
-const UPPER_JOINT_ELBOW_X = 195;
-const UPPER_JOINT_ELBOW_Y = 383;
+const UPPER_JOINT_BASE_X = 737;
+const UPPER_JOINT_BASE_Y = 282;
+const UPPER_JOINT_ELBOW_X = 181;
+const UPPER_JOINT_ELBOW_Y = 439;
 
-const FORE_JOINT_ELBOW_X = 195;
-const FORE_JOINT_ELBOW_Y = 385;
-const FORE_PEN_X = 778;
-const FORE_PEN_Y = 612;
+const FORE_JOINT_ELBOW_X = 181;
+const FORE_JOINT_ELBOW_Y = 391;
+const FORE_PEN_X = 782;
+const FORE_PEN_Y = 626;
 const imageScale = 0.5;
 
 class Plotto {
